@@ -1,0 +1,60 @@
+#!/bin/bash
+# =============================================================================
+# Stage 01 | plink2vcf.lsf
+# Merge the infant, mother and father PLINK binaries (Illumina
+# OmniExpressExome-8 v1.2, hg19, TOP-strand alleles) and write one VCF whose
+# REF/ALT match the hg19 forward strand.
+#   1. PLINK 1.9 merge (SNPs with conflicting alleles across files are dropped)
+#   2. autosomes only, chr-prefixed names, bgzipped VCF (samples named FID_IID)
+#   3. bcftools +fixref -m top : TOP strand -> forward strand, REF = hg19 base
+#   4. bcftools norm --check-ref x : drop any site still disagreeing with hg19
+# In : TRIOS_DIR/<PLINK_PREFIXES>.{bed,bim,fam}, HG19_FASTA
+# Out: TRIO_VCF_HG19 (+ .tbi), merged/fixref_{before,after}.txt
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+: "${PLINK_MEM_MB:=12000}"
+
+OUT_DIR=$(dirname "${TRIO_VCF_HG19}"); mkdir -p "${OUT_DIR}"
+TMP=$(mktemp -d "${OUT_DIR}/tmp.plink2vcf.XXXX"); trap 'rm -rf "${TMP}"' EXIT
+cd "${TRIOS_DIR}"
+
+prefixes=( ${PLINK_PREFIXES} )
+for p in "${prefixes[@]}"; do
+  for ext in bed bim fam; do [[ -s "${p}.${ext}" ]] || { log "missing ${p}.${ext}"; exit 1; }; done
+done
+
+use_module "${PLINK_MODULE}"
+plink_merge() {   # $1.. = filesets; writes ${TMP}/trios
+  local first=$1; shift
+  printf '%s\n' "$@" > "${TMP}/merge_list.txt"
+  plink --bfile "${first}" --merge-list "${TMP}/merge_list.txt" \
+        --make-bed --threads "${NCPU}" --memory "${PLINK_MEM_MB}" --out "${TMP}/trios"
+}
+if ! plink_merge "${prefixes[@]}"; then
+  [[ -s "${TMP}/trios-merge.missnp" ]] || { log "PLINK merge failed"; exit 1; }
+  log "excluding $(wc -l < "${TMP}/trios-merge.missnp") SNPs with conflicting alleles"
+  clean=()
+  for p in "${prefixes[@]}"; do
+    b="${TMP}/$(basename "${p}")"
+    plink --bfile "${p}" --exclude "${TMP}/trios-merge.missnp" --make-bed \
+          --threads "${NCPU}" --memory "${PLINK_MEM_MB}" --out "${b}"
+    clean+=("${b}")
+  done
+  plink_merge "${clean[@]}"
+fi
+
+plink --bfile "${TMP}/trios" --chr 1-22 --output-chr chrM --recode vcf bgz \
+      --threads "${NCPU}" --memory "${PLINK_MEM_MB}" --out "${TMP}/trios_raw"
+
+use_bcftools
+bcftools +fixref "${TMP}/trios_raw.vcf.gz" -- -f "${HG19_FASTA}" > "${OUT_DIR}/fixref_before.txt" 2>&1 || true
+bcftools +fixref "${TMP}/trios_raw.vcf.gz" -Ou -- -f "${HG19_FASTA}" -m top \
+  | bcftools norm --check-ref x -f "${HG19_FASTA}" -Ou \
+  | bcftools sort -T "${TMP}" -Ou \
+  | bcftools view --threads "${NCPU}" -Oz -o "${TMP}/trios_fixed.vcf.gz"
+bcftools reheader --fai "${HG19_FASTA}.fai" -o "${TRIO_VCF_HG19}" "${TMP}/trios_fixed.vcf.gz"
+bcftools index -f -t "${TRIO_VCF_HG19}"
+bcftools +fixref "${TRIO_VCF_HG19}" -- -f "${HG19_FASTA}" > "${OUT_DIR}/fixref_after.txt" 2>&1 || true
+
+log "samples: $(bcftools query -l "${TRIO_VCF_HG19}" | wc -l)  sites: $(bcftools index -n "${TRIO_VCF_HG19}")"
+receipt 01_plink2vcf

@@ -1,0 +1,31 @@
+#!/bin/bash
+# =============================================================================
+# Stage 02 | split_by_ancestry.lsf      array: one element per ancestry group
+# Subset the GRCh38 trio VCF to one ancestry group, recompute site statistics
+# within the group, keep biallelic SNPs passing
+#   F_MISSING <= 0.05, MAF >= 0.05, HWE >= 1e-6
+# and split into one BCF per autosome for phasing.
+# In : TRIO_VCF_HG38, ANCESTRY_DIR/samples_<group>.txt
+# Out: BY_ANCESTRY_DIR/<group>_trios_unphased/chr<N>.bcf (+ .csi)
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+GROUP=$(nth_word "${IDX}" ${ANCESTRY_GROUPS})
+OUT="${BY_ANCESTRY_DIR}/${GROUP}_trios_unphased"
+mkdir -p "${OUT}"
+use_bcftools
+
+FILTERED="${BY_ANCESTRY_DIR}/${GROUP}_trios_unphased_filtered.bcf"
+bcftools view --threads "${NCPU}" -S "${ANCESTRY_DIR}/samples_${GROUP}.txt" -m2 -M2 -v snps -Ou "${TRIO_VCF_HG38}" \
+  | bcftools +fill-tags -Ou -- -t MAF,F_MISSING,AC,AN,HWE \
+  | bcftools filter --threads "${NCPU}" -e 'F_MISSING > 0.05 || MAF < 0.05 || HWE < 1e-6' -Ob -o "${FILTERED}"
+bcftools index -f "${FILTERED}"
+log "${GROUP}: $(bcftools index -n "${FILTERED}") sites after filtering"
+
+# one BCF per autosome, chromosomes in parallel
+export FILTERED OUT
+printf 'chr%s\n' ${AUTOSOMES} | xargs -P "${NCPU}" -I{} sh -c \
+  'bcftools view -r {} -Ob -o "${OUT}/{}.bcf" "${FILTERED}" && bcftools index -f "${OUT}/{}.bcf"'
+
+for c in ${AUTOSOMES}; do [[ -s "${OUT}/chr${c}.bcf.csi" ]]; done
+rm -f "${FILTERED}" "${FILTERED}.csi"
+receipt 02_split "${IDX}"

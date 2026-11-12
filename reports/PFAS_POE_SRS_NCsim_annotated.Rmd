@@ -1,0 +1,873 @@
+---
+title: "Simulated Causal Analysis of PFAS Effects on Infant Neurodevelopment via Placental Imprinting"
+author: "Sean T. Bresnahan"
+date: "2025-07-25"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+
+# Introduction
+
+Here I present a causal mediation framework in which maternal PFAS exposure influences infant neurodevelopment (SRS scores) via changes in placental parent-of-origin isoform expression. The mediation pathway is moderated by fetal sex, and maternal DNA methylation is leveraged as a negative control to adjust for shared genetic and environmental confounding. I compare three methods: Control Outcome Calibration (COCA), Proximal g-Computation (PGC), and regression adjustment models that include the control outcome variable as a covariate as recommended by Huang (2021).
+
+#### Dataset:
+
+- 100 infants
+- 1000 PFAS-responsive isoforms expressed in placenta (each with 1–5 CpG sites)
+- Maternal PFAS exposure
+- Fetal sex
+- Latent shared confounder (correlated with PFAS)
+- Placental isoform-level maternal expression ratios (simulating imprinting)
+- Infant SRS scores (influenced by disrupted imprinting and confounder)
+- PFAS affects imprinting of a subset of isoforms
+- Some imprinting-SRS associations are confounded by maternal methylation
+
+# Load Packages and Define Knitr Options
+
+```{r data_setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(lavaan)
+library(boot)
+library(ggplot2)
+library(knitr)
+library(doParallel)
+library(foreach)
+```
+
+# Simulate Dataset
+
+We first define the number of samples (infants) and isoforms to be simulated.
+
+## Define Samples and Isoforms
+
+```{r parameters}
+set.seed(42)
+n_samples <- 100
+n_isoforms <- 1000
+simulation_scenario <- "null"
+```
+
+Here we simulate fetal sex, maternal PFAS exposure levels, and a latent confounder that is correlated with PFAS.
+
+## Generate Fetal Sex, PFAS Exposure, and Shared Confounder
+
+```{r simulate_covariates}
+# Fetal sex (0 = female, 1 = male)
+fetal_sex <- rbinom(n_samples, size = 1, prob = 0.5)
+hist(fetal_sex, main = "Fetal Sex", xlab = "Sex (0 = Female, 1 = Male)")
+
+# Maternal PFAS exposure (ng/mL, log-normal)
+# Common sdlog values for environmental contaminants in humans can range from 0.8 to 1.5.
+PFAS <- rlnorm(n_samples, meanlog = log(3), sdlog = 0.9) # Adjusted sdlog from 0.4 to 0.9
+hist(PFAS, main = "PFAS Exposure", xlab = "ng/mL")
+
+# Latent confounder U, correlated with PFAS
+U <- rnorm(n_samples, mean = scale(PFAS), sd = 1)
+```
+
+Next, we simulate maternal DNA methylation data for each isoform, capturing shared environmental or genetic confounding via a latent variable.
+
+## Simulate CpG Methylation from Shared Confounding Signal
+
+```{r simulate_methylation}
+n_cpg_per_isoform <- sample(1:5, size = n_isoforms, replace = TRUE)
+maternal_meth_list <- lapply(n_cpg_per_isoform, function(n_cpg) {
+  matrix(
+    plogis(matrix(rnorm(n_samples * n_cpg, mean = rep(U, each = n_cpg), sd = 0.5), nrow = n_samples)), # Adjusted sd from 1 to 0.5
+    nrow = n_samples
+  )
+})
+```
+
+## Simulate Isoform-Level Expression Ratios
+
+```{r simulate_expression_ratios}
+# Start with baseline biallelic expression + noise (maternal expression ratio)
+# Using Beta distribution for ratios (bounded 0-1), which is more appropriate for proportions.
+# shape1 = 50, shape2 = 50 gives a mean of 0.5 and a reasonable, but not extremely narrow, variance.
+expr_ratios <- matrix(rbeta(n_samples * n_isoforms, shape1 = 50, shape2 = 50), nrow = n_samples)
+
+# Define 50% of isoforms as true mediators
+mediated_isoforms <- sample(1:n_isoforms, size = n_isoforms * 0.5)
+
+# PFAS influences imprinting in these isoforms
+for (i in mediated_isoforms) {
+  effect_mean <- 0.05 # mean effect
+  if (simulation_scenario == "null") {
+    effect_mean <- 0 # Set mean effect to 0 for null scenario
+  }
+  effect <- scale(PFAS) * rnorm(1, mean = effect_mean, sd = 0.01) # Use the adjusted mean
+  expr_ratios[, i] <- expr_ratios[, i] + effect
+
+  # Clamp values to ensure they stay within [0,1]
+  expr_ratios[, i] <- pmax(0, pmin(1, expr_ratios[, i])) 
+}
+
+hist(expr_ratios, main = "Parental-origin expression ratios with PFAS association", xlab = "Ratio M:M+P")
+```
+
+## Simulate SRS Scores Influenced by Disrupted Imprinting
+
+```{r simulate_srs}
+# Create SRS score from expression of mediated isoforms + confounder + noise
+srs_effect_mean <- 2 # mean effect
+if (simulation_scenario == "null") {
+  srs_effect_mean <- 0 # Set mean effect to 0 for null scenario
+}
+SRS_contrib <- rowSums(scale(expr_ratios[, mediated_isoforms]) %*%
+                        matrix(rnorm(length(mediated_isoforms), mean = srs_effect_mean, sd = 0.5), ncol = 1)) # Use the adjusted mean
+SRS <- scale(SRS_contrib + scale(U) * 0.5 + rnorm(n_samples, 0, 1))
+
+hist(SRS, main = "Simulated SRS", xlab = "SRS")
+```
+
+## Include Confounding Effects
+
+```{r include_confounding}
+# Select 50% of mediated isoforms to be confounded by methylation
+confounded_idx <- sample(mediated_isoforms, size = length(mediated_isoforms) * 0.5)
+confounding_contrib <- rep(0, n_samples)
+
+for (i in confounded_idx) {
+  meth_mean <- rowMeans(maternal_meth_list[[i]])
+  effect_meth_expr <- scale(meth_mean) * rnorm(1, mean = 0.2, sd = 0.05)
+  expr_ratios[, i] <- expr_ratios[, i] + effect_meth_expr
+  expr_ratios[, i] <- pmax(0, pmin(1, expr_ratios[, i]))
+  
+  confounding_contrib <- confounding_contrib + scale(meth_mean) * rnorm(1, mean = 1.5, sd = 0.3)
+}
+
+# Inject confounding into SRS
+SRS <- scale(SRS + confounding_contrib)
+hist(SRS, main = "Simulated SRS with methylation-driven bias", xlab = "SRS")
+```
+
+Finally, we clean up and scale the simulated matrices, then reshape the methylation data for downstream analysis and visualization.
+
+## Finalize and Format Output
+
+```{r finalize_output}
+expr_df <- as.data.frame(expr_ratios)
+colnames(expr_df) <- paste0("isoform_", 1:n_isoforms)
+
+metadata_df <- data.frame(
+  sample = 1:n_samples,
+  SRS = SRS,
+  PFAS = PFAS,
+  fetal_sex = fetal_sex
+)
+
+meth_long <- do.call(rbind, lapply(1:n_isoforms, function(i) {
+  meth_mat <- maternal_meth_list[[i]]
+  n_cpg <- ncol(meth_mat)
+  data.frame(
+    sample = rep(1:n_samples, times = n_cpg),
+    isoform = paste0("isoform_", i),
+    cpg = rep(1:n_cpg, each = n_samples),
+    meth = as.vector(meth_mat)
+  )
+}))
+
+hist(meth_long$meth, main = "Isoform-Level Methylation", xlab = "Beta-value")
+```
+
+# Moderated Mediation Analysis (lavaan)
+
+Select one isoform for demonstration.
+
+```{r moderated_mediation}
+iso <- "isoform_27"
+df <- cbind(metadata_df, expr = expr_df[[iso]])
+
+meth_avg <- meth_long %>%
+  filter(isoform == iso) %>%
+  group_by(sample) %>%
+  summarise(m_meth = mean(meth), .groups = "drop")
+
+df <- merge(df, meth_avg, by = "sample")
+
+model <- '
+  expr ~ a1*PFAS + a2*fetal_sex + a3*PFAS:fetal_sex
+  SRS ~ b1*expr + b2*fetal_sex + b3*expr:fetal_sex + c*PFAS
+  ind_female := a1 * b1
+  ind_male := (a1 + a3) * (b1 + b3)
+  dir := c
+  total_female := dir + ind_female
+  total_male := dir + ind_male
+'
+
+fit <- sem(model, data = df, se = "bootstrap", bootstrap = 100)
+summary(fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+# COCA (Control Outcome Calibration)
+
+```{r coca}
+# COCA calibration model: includes SRS * fetal_sex interaction
+coca_model <- lm(m_meth ~ PFAS + SRS * fetal_sex, data = df)
+summary(coca_model)
+
+# Extract coefficients for calibration formula
+beta_A <- coef(coca_model)["PFAS"]
+beta_Y <- coef(coca_model)["SRS"]
+
+# Calibrated PFAS effect estimate
+psi_coca <- -beta_A / beta_Y
+cat("COCA-calibrated PFAS effect estimate:", round(psi_coca, 4), "\n")
+
+coca_fn <- function(data, indices) {
+  d <- data[indices, ]
+  fit <- lm(m_meth ~ PFAS + SRS * fetal_sex, data = d)
+  -coef(fit)["PFAS"] / coef(fit)["SRS"]
+}
+
+boot_out <- boot(df, coca_fn, R = 100)
+boot.ci(boot_out, type = "perc")
+```
+
+# Proximal G-Computation (PGC)
+
+```{r pgc}
+# Stage 1: bridge function includes interaction
+bridge_model <- lm(m_meth ~ expr + SRS * fetal_sex, data = df)
+df$Z_hat <- predict(bridge_model)
+
+# Stage 2: PFAS * fetal_sex interaction for moderated effect
+df$Y_adj <- df$SRS - (df$Z_hat - mean(df$Z_hat))
+pgc_model <- lm(Y_adj ~ PFAS * fetal_sex, data = df)
+summary(pgc_model)
+
+pgc_fn <- function(data, indices) {
+  d <- data[indices, ]
+  
+  # Stage 1: bridge model with SRS * sex
+  bridge <- lm(m_meth ~ expr + SRS * fetal_sex, data = d)
+  Z_hat <- predict(bridge)
+  Y_adj <- d$SRS - (Z_hat - mean(Z_hat))
+  
+  # Stage 2: PGC with PFAS * fetal_sex
+  pgc_fit <- lm(Y_adj ~ PFAS * fetal_sex, data = cbind(d, Y_adj))
+  
+  # Return main effect of PFAS (for females) only
+  return(coef(pgc_fit)["PFAS"])
+}
+
+pgc_est_female <- coef(pgc_model)["PFAS"]
+pgc_est_male <- coef(pgc_model)["PFAS"] + coef(pgc_model)["PFAS:fetal_sex"]
+
+pgc_fn <- function(data, indices) {
+  d <- data[indices, ]
+  bridge <- lm(m_meth ~ expr + SRS * fetal_sex, data = d)
+  Z_hat <- predict(bridge)
+  Y_adj <- d$SRS - (Z_hat - mean(Z_hat))
+  pgc_fit <- lm(Y_adj ~ PFAS * fetal_sex, data = cbind(d, Y_adj))
+
+  beta_pfas <- coef(pgc_fit)["PFAS"]
+  beta_int <- coef(pgc_fit)["PFAS:fetal_sex"]
+  c(female = beta_pfas, male = beta_pfas + beta_int)
+}
+
+# Bootstrap
+boot_out <- boot(df, pgc_fn, R = 100)
+boot.ci(boot_out, type = "perc")
+```
+
+# Parallelized Analysis Across Isoforms
+
+```{r parallelized_analysis, warning=F, eval=F}
+# Bootstraps
+n_boot <- 100
+
+# Set up parallel backend
+n_cores <- parallel::detectCores() - 1
+cl <- makeCluster(n_cores)
+registerDoParallel(cl)
+
+# Predefine names for output list
+isoform_names <- paste0("isoform_", 1:n_isoforms)
+
+# Parallel processing
+results_list <- foreach(i = 1:n_isoforms, .packages = c("dplyr", "lavaan", "boot")) %dopar% {
+  iso_name <- isoform_names[i]
+  
+  df <- cbind(metadata_df, expr = expr_df[[iso_name]])
+  
+  meth_avg <- meth_long %>%
+    filter(isoform == iso_name) %>%
+    group_by(sample) %>%
+    summarise(m_meth = mean(meth), .groups = "drop")
+  
+  df <- merge(df, meth_avg, by = "sample")
+
+  # Lavaan model
+  model <- '
+    expr ~ a1*PFAS + a2*fetal_sex + a3*PFAS:fetal_sex
+    SRS ~ b1*expr + b2*fetal_sex + b3*expr:fetal_sex + c*PFAS
+    ind_female := a1 * b1
+    ind_male := (a1 + a3) * (b1 + b3)
+    dir := c
+    total_female := dir + ind_female
+    total_male := dir + ind_male
+  '
+
+  lavaan_fit <- tryCatch({
+    sem(model, data = df, se = "bootstrap", bootstrap = n_boot)
+  }, error = function(e) NULL)
+
+  # COCA
+  coca_model <- lm(m_meth ~ PFAS + SRS * fetal_sex, data = df)
+  beta_A <- coef(coca_model)["PFAS"]
+  beta_Y <- coef(coca_model)["SRS"]
+  psi_coca <- -beta_A / beta_Y
+
+  coca_fn <- function(data, indices) {
+    d <- data[indices, ]
+    fit <- lm(m_meth ~ PFAS + SRS * fetal_sex, data = d)
+    -coef(fit)["PFAS"] / coef(fit)["SRS"]
+  }
+
+  coca_boot <- boot(df, coca_fn, R = n_boot)
+  coca_ci <- tryCatch(boot.ci(coca_boot, type = "perc"), error = function(e) NULL)
+
+  # PGC
+  bridge_model <- lm(m_meth ~ expr + SRS * fetal_sex, data = df)
+  df$Z_hat <- predict(bridge_model)
+  df$Y_adj <- df$SRS - (df$Z_hat - mean(df$Z_hat))
+
+  pgc_model <- lm(Y_adj ~ PFAS * fetal_sex, data = df)
+
+  pgc_fn <- function(data, indices) {
+    d <- data[indices, ]
+    bridge <- lm(m_meth ~ expr + SRS * fetal_sex, data = d)
+    Z_hat <- predict(bridge)
+    Y_adj <- d$SRS - (Z_hat - mean(Z_hat))
+    pgc_fit <- lm(Y_adj ~ PFAS * fetal_sex, data = cbind(d, Y_adj))
+    coef(pgc_fit)["PFAS"]
+  }
+
+  pgc_boot <- boot(df, pgc_fn, R = n_boot)
+  pgc_ci <- tryCatch(boot.ci(pgc_boot, type = "perc"), error = function(e) NULL)
+
+  # Return result for this isoform
+  list(
+    lavaan_fit = lavaan_fit,
+    COCA = list(
+      model = coca_model,
+      boot = coca_boot,
+      ci = coca_ci
+    ),
+    PGC = list(
+      model = pgc_model,
+      boot = pgc_boot,
+      ci = pgc_ci
+    )
+  )
+}
+
+# Set names to match isoform identifiers
+names(results_list) <- isoform_names
+
+# Stop cluster
+stopCluster(cl)
+
+# Save results to file
+save(list=c("results_list"),file="results_list.RData")
+```
+
+```{r,echo=F,warning=F,message=F}
+load("results_list.RData")
+```
+
+# Plotting
+
+```{r plotting_results, warning = F, message = F}
+# Initialize results data.frames
+sem_pval_df <- data.frame()
+coca_df <- data.frame()
+pgc_df <- data.frame()
+
+iso_names <- names(results_list)
+
+for (i in seq_along(results_list)) {
+  iso <- iso_names[i]
+  res <- results_list[[i]]
+
+  # --- SEM path p-values
+  fit <- res$lavaan_fit
+  if (!is.null(fit)) {
+    pe <- tryCatch(parameterEstimates(fit), error = function(e) NULL)
+    if (!is.null(pe)) {
+      selected_paths <- pe %>%
+        filter(label %in% c("a1", "a3", "b1", "b3", "c",
+                            "ind_female", "ind_male", "total_female", "total_male")) %>%
+        select(label, pvalue)
+      if (nrow(selected_paths) > 0) {
+        sem_pval_df <- bind_rows(sem_pval_df,
+                                 data.frame(
+                                   isoform = iso,
+                                   path = selected_paths$label,
+                                   pval = selected_paths$pvalue
+                                 ))
+      }
+    }
+  }
+
+  # --- COCA model: extract PFAS, fetal_sex, and interaction p-values and CI
+  coca_fit <- results_list[[i]][["COCA"]][["model"]]
+  
+  if (!is.null(coca_fit)) {
+    coef_table <- coef(summary(coca_fit))
+    confint_table <- tryCatch(confint(coca_fit), error = function(e) NULL)
+  
+    pval_pfas  <- coef_table["PFAS", "Pr(>|t|)"]
+    pval_sex   <- if ("fetal_sex" %in% rownames(coef_table)) coef_table["fetal_sex", "Pr(>|t|)"] else NA
+    pval_int   <- if ("SRS:fetal_sex" %in% rownames(coef_table)) coef_table["SRS:fetal_sex", "Pr(>|t|)"] else NA
+  
+    ci_lower <- ci_upper <- NA
+    if (!is.null(confint_table) && "PFAS" %in% rownames(confint_table)) {
+      ci_lower <- confint_table["PFAS", 1]
+      ci_upper <- confint_table["PFAS", 2]
+    }
+  
+    signif <- !(is.na(ci_lower) || (ci_lower < 0 & ci_upper > 0))  # TRUE if CI excludes 0
+  
+    coca_df <- bind_rows(coca_df, data.frame(
+      isoform = iso,
+      pval_PFAS = pval_pfas,
+      pval_fetal_sex = pval_sex,
+      pval_PFAS_fetal_sex = pval_int,
+      ci_lower = ci_lower,
+      ci_upper = ci_upper,
+      significant = signif
+    ))
+  }
+
+  # --- PGC model: extract PFAS, fetal_sex, and interaction p-values
+  pgc_model <- tryCatch(res$PGC$model, error = function(e) NULL)
+  pgc_boot  <- tryCatch(res$PGC$boot, error = function(e) NULL)
+
+  if (!is.null(pgc_model) && !is.null(pgc_boot)) {
+    coef_pg <- coef(summary(pgc_model))
+
+    pval_pfas <- coef_pg["PFAS", "Pr(>|t|)"]
+    pval_sex  <- if ("fetal_sex" %in% rownames(coef_pg)) coef_pg["fetal_sex", "Pr(>|t|)"] else NA
+    pval_int  <- if ("PFAS:fetal_sex" %in% rownames(coef_pg)) coef_pg["PFAS:fetal_sex", "Pr(>|t|)"] else NA
+
+    boot_estimates <- pgc_boot$t
+    signif <- NA
+    ci_lower <- ci_upper <- NA
+    if (!is.null(boot_estimates) && length(boot_estimates) > 1) {
+      ci_bounds <- quantile(boot_estimates, probs = c(0.025, 0.975), na.rm = TRUE)
+      ci_lower <- ci_bounds[1]
+      ci_upper <- ci_bounds[2]
+      signif <- !(ci_lower < 0 & ci_upper > 0)
+    }
+
+    pgc_df <- bind_rows(pgc_df, data.frame(
+      isoform = iso,
+      pval_PFAS = pval_pfas,
+      pval_fetal_sex = pval_sex,
+      pval_PFAS_fetal_sex = pval_int,
+      ci_lower = ci_lower,
+      ci_upper = ci_upper,
+      significant = signif
+    ))
+  }
+}
+```
+
+## SEM p-value distributions
+
+```{r plot_sem_pvalues}
+ggplot(sem_pval_df, aes(x = pval)) +
+  geom_histogram(binwidth = 0.025, fill = "#4682B4", color = "black") +
+  facet_wrap(~ path, scales = "free_y") +
+  theme_minimal() +
+  labs(title = "SEM Path p-values Across Isoforms",
+       x = "p-value", y = "Frequency")
+```
+
+```{r sem_table, echo = F}
+sem_table <- data.frame(
+  Path = c("a1", "a3", "b1", "b3", "c", "ind_female", "ind_male", "total_female", "total_male"),
+  Pattern = c(
+    "Left skew with peak near 0",
+    "Roughly uniform",
+    "Strong left skew with high peak at 0",
+    "Roughly uniform",
+    "Left skew (many < 0.05)",
+    "Right skew (most p > 0.5)",
+    "Right skew (most p > 0.5)",
+    "Extreme left skew (strong signal)",
+    "Extreme left skew (strong signal)"
+  ),
+  Interpretation = c(
+    "PFAS is robustly associated with imprinting disruption across many isoforms.",
+    "Fetal sex moderates the PFAS-expression path only in some isoforms; no strong overall signal.",
+    "Imprinting disruption is strongly associated with SRS across isoforms.",
+    "No consistent interaction between sex and expression on SRS.",
+    "PFAS has a direct effect on SRS in many isoforms.",
+    "Female-specific indirect effects are weak or absent across most isoforms.",
+    "Male-specific mediation effects are weak or absent across most isoforms.",
+    "PFAS has strong total effects on SRS in females for many isoforms.",
+    "PFAS has strong total effects on SRS in males for many isoforms."
+  )
+)
+
+kable(sem_table, caption = "Interpretation of SEM Path p-value Distributions")
+```
+
+## COCA & PGC p-value distributions
+
+```{r plot_coca_pgc_pvals, warning = F}
+# Pivot COCA to long format
+coca_pvals_long <- coca_df %>%
+  pivot_longer(
+    cols = c(pval_PFAS, pval_fetal_sex, pval_PFAS_fetal_sex),
+    names_to = "Term",
+    values_to = "pval"
+  ) %>%
+  mutate(
+    Method = "COCA",
+    Term = recode(Term,
+                  "pval_PFAS" = "PFAS",
+                  "pval_fetal_sex" = "fetal_sex",
+                  "pval_PFAS_fetal_sex" = "PFAS:fetal_sex")
+  )
+
+# Pivot PGC to long format
+pgc_pvals_long <- pgc_df %>%
+  pivot_longer(
+    cols = c(pval_PFAS, pval_fetal_sex, pval_PFAS_fetal_sex),
+    names_to = "Term",
+    values_to = "pval"
+  ) %>%
+  mutate(
+    Method = "PGC",
+    Term = recode(Term,
+                  "pval_PFAS" = "PFAS",
+                  "pval_fetal_sex" = "fetal_sex",
+                  "pval_PFAS_fetal_sex" = "PFAS:fetal_sex")
+  )
+
+# Combine and filter non-missing p-values
+pval_df <- bind_rows(coca_pvals_long, pgc_pvals_long) %>%
+  filter(!is.na(pval))
+
+# Plot
+ggplot(pval_df, aes(x = pval)) +
+  geom_histogram(bins = 40, fill = "steelblue", color = "black") +
+  facet_grid(Method ~ Term, scales = "free", drop = TRUE) +
+  theme_minimal() +
+  labs(
+    title = "Raw p-values for COCA and PGC Tests",
+    x = "p-value", y = "Number of Isoforms"
+  )
+```
+
+## COCA & PGC significance
+
+```{r plot_significance_bar}
+# Significance for PFAS (from 95% CI exclusion flag)
+sig_pfas <- bind_rows(
+  coca_df %>% transmute(isoform, significant, Method = "COCA", Term = "PFAS"),
+  pgc_df %>% transmute(isoform, significant, Method = "PGC", Term = "PFAS")
+)
+
+# Significance for fetal_sex (p < 0.05)
+sig_sex <- bind_rows(
+  coca_df %>%
+    filter(!is.na(pval_fetal_sex)) %>%
+    mutate(significant = pval_fetal_sex < 0.05,
+           Method = "COCA", Term = "fetal_sex") %>%
+    select(isoform, significant, Method, Term),
+  pgc_df %>%
+    filter(!is.na(pval_fetal_sex)) %>%
+    mutate(significant = pval_fetal_sex < 0.05,
+           Method = "PGC", Term = "fetal_sex") %>%
+    select(isoform, significant, Method, Term)
+)
+
+# Significance for PFAS:fetal_sex interaction (p < 0.05)
+sig_int <- bind_rows(
+  coca_df %>%
+    filter(!is.na(pval_PFAS_fetal_sex)) %>%
+    mutate(significant = pval_PFAS_fetal_sex < 0.05,
+           Method = "COCA", Term = "PFAS:fetal_sex") %>%
+    select(isoform, significant, Method, Term),
+  pgc_df %>%
+    filter(!is.na(pval_PFAS_fetal_sex)) %>%
+    mutate(significant = pval_PFAS_fetal_sex < 0.05,
+           Method = "PGC", Term = "PFAS:fetal_sex") %>%
+    select(isoform, significant, Method, Term)
+)
+
+# Combine all
+sig_df <- bind_rows(sig_pfas, sig_sex, sig_int) %>%
+  mutate(
+    Significance = ifelse(significant, "Significant", "Not Significant"),
+    Method = factor(Method),
+    Term = factor(Term, levels = c("PFAS", "fetal_sex", "PFAS:fetal_sex")),
+    Significance = factor(Significance)
+  )
+
+# Plot
+ggplot(sig_df, aes(x = Term, fill = Significance)) +
+  geom_bar(position = "dodge", color = "black", na.rm = TRUE) +
+  facet_wrap(~ Method, drop = TRUE, scales = "free") +
+  scale_fill_manual(values = c("gray70", "forestgreen")) +
+  theme_minimal() +
+  labs(
+    title = "CI- or p-value-Based Significance of Modeled Effects (COCA & PGC)",
+    x = "Model Term", y = "Number of Isoforms", fill = "Significance"
+  )
+```
+
+```{r interpret_NC_methods, echo = F}
+coca_pgc_table <- data.frame(
+  Method = c("COCA", "PGC"),
+  PValue_Pattern = c(
+    "PFAS p-values sharply left-skewed; uniform for sex and interaction terms",
+    "PFAS p-values show strong left skew; sex and interaction terms strongly right-skewed"
+  ),
+  CI_Significance = c(
+    "Approximately 60% of isoforms significant for PFAS; ~1% for sex and interaction",
+    "Fewer than 10% of isoforms significant for PFAS; virtually none for sex or interaction"
+  ),
+  Interpretation = c(
+    "COCA detects PFAS effects in the majority of isoforms despite correction, suggesting persistent confounding influence via m_meth and limited control for indirect bias.",
+    "PGC shows tighter control of Type I error, but still overestimates PFAS effects under confounding; effectively suppresses false positives for sex and interaction terms."
+  )
+)
+
+kable(coca_pgc_table, caption = "Summary of COCA and PGC Results for Isoform-Level Mediation with Sex Interaction")
+```
+
+# Regression adjustment models with control outcome variable as covariate
+
+```{r, regression_adjustment_models}
+# Example for one isoform
+iso_idx <- 27
+meth_proxy <- rowMeans(maternal_meth_list[[iso_idx]])
+
+# Include sex main effect and interaction with expression
+model <- lm(SRS ~ PFAS + expr_ratios[, iso_idx] * fetal_sex + meth_proxy)
+
+summary(model)
+```
+
+```{r, loop_rgms_across_isoforms}
+# Initialize results table for moderated direct adjustment
+adjusted_lm_results <- data.frame(
+  isoform = 1:n_isoforms,
+  coef_expr = NA,           p_expr = NA,           sig_ci_expr = NA,
+  coef_sex = NA,            p_sex = NA,            sig_ci_sex = NA,
+  coef_interaction = NA,    p_interaction = NA,    sig_ci_interaction = NA
+)
+
+for (i in 1:n_isoforms) {
+  meth_proxy <- rowMeans(maternal_meth_list[[i]])
+  fit <- lm(SRS ~ PFAS + expr_ratios[, i] * fetal_sex + meth_proxy)
+  confint_fit <- confint(fit)
+  coef_names <- names(coef(fit))
+
+  expr_term <- "expr_ratios[, i]"
+  sex_term  <- "fetal_sex"
+  int_term  <- "expr_ratios[, i]:fetal_sex"
+
+  # Expression term
+  if (expr_term %in% coef_names) {
+    idx <- which(coef_names == expr_term)
+    adjusted_lm_results$coef_expr[i] <- coef(fit)[idx]
+    adjusted_lm_results$p_expr[i] <- summary(fit)$coefficients[idx, "Pr(>|t|)"]
+    adjusted_lm_results$sig_ci_expr[i] <- !(0 >= confint_fit[idx, 1] & 0 <= confint_fit[idx, 2])
+  }
+
+  # Fetal sex term
+  if (sex_term %in% coef_names) {
+    idx <- which(coef_names == sex_term)
+    adjusted_lm_results$coef_sex[i] <- coef(fit)[idx]
+    adjusted_lm_results$p_sex[i] <- summary(fit)$coefficients[idx, "Pr(>|t|)"]
+    adjusted_lm_results$sig_ci_sex[i] <- !(0 >= confint_fit[idx, 1] & 0 <= confint_fit[idx, 2])
+  }
+
+  # Interaction term
+  if (int_term %in% coef_names) {
+    idx <- which(coef_names == int_term)
+    adjusted_lm_results$coef_interaction[i] <- coef(fit)[idx]
+    adjusted_lm_results$p_interaction[i] <- summary(fit)$coefficients[idx, "Pr(>|t|)"]
+    adjusted_lm_results$sig_ci_interaction[i] <- !(0 >= confint_fit[idx, 1] & 0 <= confint_fit[idx, 2])
+  }
+}
+
+# Stack into long format for p-values
+pval_df <- bind_rows(
+  adjusted_lm_results %>% select(isoform, pval = p_expr) %>% mutate(Term = "expr"),
+  adjusted_lm_results %>% select(isoform, pval = p_sex) %>% mutate(Term = "fetal_sex"),
+  adjusted_lm_results %>% select(isoform, pval = p_interaction) %>% mutate(Term = "expr:fetal_sex")
+)
+
+# Add method label
+pval_df$Method <- "DirectAdj"
+
+ggplot(pval_df, aes(x = pval)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "black") +
+  facet_grid(Method ~ Term, scales = "free", drop = TRUE) +
+  theme_minimal() +
+  labs(
+    title = "Raw p-values for Direct Adjustment Tests",
+    x = "p-value", y = "Number of Isoforms"
+  )
+
+sig_df <- bind_rows(
+  adjusted_lm_results %>% transmute(isoform, Term = "expr",         sig = sig_ci_expr),
+  adjusted_lm_results %>% transmute(isoform, Term = "fetal_sex",    sig = sig_ci_sex),
+  adjusted_lm_results %>% transmute(isoform, Term = "expr:fetal_sex", sig = sig_ci_interaction)
+) %>%
+  mutate(
+    Method = "DirectAdj",
+    Significance = ifelse(sig, "Significant", "Not Significant")
+  )
+
+ggplot(sig_df, aes(x = Term, fill = Significance)) +
+  geom_bar(position = "dodge", color = "black") +
+  facet_wrap(~ Method) +
+  scale_fill_manual(values = c("gray70","forestgreen")) +
+  theme_minimal() +
+  labs(
+    title = "CI-Based Significance of Direct Adjustment Terms",
+    x = "Model Term", y = "Number of Isoforms", fill = "Significance"
+  )
+```
+
+```{r interpret_regression, echo=F}
+direct_adj_table <- data.frame(
+  Method = "Direct Adjustment (Huang, 2021)",
+  PValue_Pattern = "Uniform (no enrichment near 0)",
+  CI_Significance = "Few isoforms significant",
+  Interpretation = "Adjusting directly for methylation removes most expression–SRS signal, suggesting either methylation absorbs the effect (overadjustment), or residual confounding remains. Consistent with Huang (2021), this approach is conservative but stable under real-data-like assumptions."
+)
+
+kable(direct_adj_table, caption = "Summary of Direct Adjustment Results (Huang, 2021 Approach)")
+```
+
+
+# Calculate Type I Error Rates
+
+```{r calc_type1_error}
+# For a null simulation, we expect these rates to be close to a = 0.05
+# for true null effects, indicating correct Type I error control.
+# Rates significantly above 0.05 suggest inflated Type I error.
+
+type1_error_results <- list()
+
+# 1. SEM Type I Error
+# Focusing on the mediation paths (a1, b1) and indirect effects (ind_female, ind_male)
+# which are set to null in the simulation scenario.
+sem_type1 <- sem_pval_df %>%
+  filter(path %in% c("a1", "b1", "ind_female", "ind_male")) %>%
+  group_by(path) %>%
+  summarise(
+    Type1_Error_Rate = mean(pval < 0.05, na.rm = TRUE),
+    .groups = "drop"
+  )
+type1_error_results$SEM <- sem_type1
+
+# 2. COCA Type I Error
+# For COCA, 'significant' is determined by whether the 95% CI for the PFAS effect excludes 0.
+# For other terms (fetal_sex, SRS:fetal_sex interaction), we use a p-value threshold.
+coca_type1 <- coca_df %>%
+  summarise(
+    Type1_Error_Rate_PFAS = mean(significant, na.rm = TRUE), # Uses the 'significant' flag from CI
+    Type1_Error_Rate_fetal_sex = mean(pval_fetal_sex < 0.05, na.rm = TRUE),
+    Type1_Error_Rate_SRS_fetal_sex_int = mean(pval_PFAS_fetal_sex < 0.05, na.rm = TRUE) # This is for the SRS:fetal_sex interaction in the COCA model
+  ) %>%
+  pivot_longer(everything(), names_to = "path", values_to = "Type1_Error_Rate") %>%
+  mutate(path = gsub("Type1_Error_Rate_", "", path))
+type1_error_results$COCA <- coca_type1
+
+# 3. PGC Type I Error
+# For PGC, 'significant' for PFAS is also based on CI exclusion of 0.
+# For other terms (fetal_sex, PFAS:fetal_sex interaction), p-value threshold is used.
+pgc_type1 <- pgc_df %>%
+  summarise(
+    Type1_Error_Rate_PFAS = mean(significant, na.rm = TRUE), # Uses the 'significant' flag from CI
+    Type1_Error_Rate_fetal_sex = mean(pval_fetal_sex < 0.05, na.rm = TRUE),
+    Type1_Error_Rate_PFAS_fetal_sex_int = mean(pval_PFAS_fetal_sex < 0.05, na.rm = TRUE) # This is for the PFAS:fetal_sex interaction in the PGC model
+  ) %>%
+  pivot_longer(everything(), names_to = "path", values_to = "Type1_Error_Rate") %>%
+  mutate(path = gsub("Type1_Error_Rate_", "", path))
+type1_error_results$PGC <- pgc_type1
+
+# 4. Regression Adjustment Type I Error
+# 'sig_ci_*' flags are based on CI excluding 0.
+adj_type1 <- adjusted_lm_results %>%
+  summarise(
+    Type1_Error_Rate_expr = mean(sig_ci_expr, na.rm = TRUE),
+    Type1_Error_Rate_sex = mean(sig_ci_sex, na.rm = TRUE),
+    Type1_Error_Rate_expr_fetal_sex_int = mean(sig_ci_interaction, na.rm = TRUE) # This is for the expr:fetal_sex interaction in the direct adjustment model
+  ) %>%
+  pivot_longer(everything(), names_to = "path", values_to = "Type1_Error_Rate") %>%
+  mutate(path = gsub("Type1_Error_Rate_", "", path))
+type1_error_results$DirectAdj <- adj_type1
+```
+
+```{r print_type1_error, echo=F}
+# Combine all tibbles into a single data frame
+combined_type1_errors <- bind_rows(
+  type1_error_results$SEM %>% mutate(Method = "SEM"),
+  type1_error_results$COCA %>% mutate(Method = "COCA"),
+  type1_error_results$PGC %>% mutate(Method = "PGC"),
+  type1_error_results$DirectAdj %>% mutate(Method = "Direct Adjustment")
+) %>%
+  # Reorder columns for better presentation
+  select(Method, path, Type1_Error_Rate) %>%
+  # Rename paths for clarity if desired (e.g., "a1" to "PFAS -> Expression")
+  mutate(
+    path = case_when(
+      path == "a1" ~ "PFAS -> Expression (a1)",
+      path == "b1" ~ "Expression -> SRS (b1)",
+      path == "ind_female" ~ "Indirect Effect (Female)",
+      path == "ind_male" ~ "Indirect Effect (Male)",
+      path == "PFAS" ~ "PFAS Main Effect",
+      path == "fetal_sex" ~ "Fetal Sex Main Effect",
+      path == "SRS_fetal_sex_int" ~ "SRS:Fetal Sex Interaction",
+      path == "PFAS_fetal_sex_int" ~ "PFAS:Fetal Sex Interaction",
+      path == "expr" ~ "Expression Main Effect",
+      path == "sex" ~ "Sex Main Effect",
+      path == "expr_fetal_sex_int" ~ "Expression:Fetal Sex Interaction",
+      TRUE ~ path # Keep others as is
+    )
+  )
+
+# Print the combined table using kable
+kable(combined_type1_errors, 
+      caption = "Type I Error Rates Across Different Methods and Causal Paths (Null Simulation)",
+      digits = 3) # Format numbers to 3 decimal places for readability
+```
+
+#### Interpretation of Overall Type 1 Error Rates by Method
+
+##### SEM
+
+SEM shows moderate inflation of Type I error for the individual path coefficients: 0.127 for PFAS -> expression (a1) and 0.259 for expression -> SRS (b1). This indicates over-sensitivity in estimating direct paths under the null. In contrast, the indirect effects remain better controlled — 0.051 for females and 0.022 for males — suggesting that the bootstrapped product-of-coefficients approach is more robust, particularly for the male pathway. Overall, while SEM struggles with inflated error at the path level, it offers reasonably controlled Type I error for total mediation effects.
+
+##### COCA
+
+COCA yields a highly inflated Type I error for the PFAS main effect (0.562), indicating substantial bias even under null simulation. This reinforces concerns that COCA’s calibration may fail when residual confounding (e.g., via methylation) is strong and unmeasured. However, the fetal sex and interaction terms remain well controlled (0.022 and 0.017, respectively), confirming that the inflation is specific to the PFAS term, likely due to uncorrected bias in the PFAS -> methylation -> SRS pathway. This highlights COCA’s vulnerability to latent confounders, especially when the primary exposure is entangled with the mediator’s confounders.
+
+##### PGC
+
+PGC produces moderate inflation for the PFAS effect (0.076), but maintains perfect control for the fetal sex and interaction terms (both 0.000). This suggests that PGC partially mitigates PFAS-related confounding via proxy variables (expression), but not completely — especially when the proxy does not fully capture the true exposure–mediator relationship. While more conservative than COCA, PGC still exhibits nontrivial false positive rates and may require stronger or better-calibrated proxies to perform reliably under the null.
+
+##### Direct Adjustment
+
+The direct adjustment method (SRS ~ expression + sex + interaction) shows excellent Type I error control across all tested paths.

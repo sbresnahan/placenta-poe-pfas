@@ -1,0 +1,38 @@
+#!/bin/bash
+# =============================================================================
+# Stage 01 (QC) | manifest_qc.lsf
+# Optional check of the array manifest against hg19: which SNPs needed a
+# swap/flip to match the reference. Not used by later steps (stage 01 aligns
+# genotypes directly with bcftools +fixref).
+#   1. SNP names present in dbSNP (GRCh38) -> HumanOmniExpressExome_8v1_2_SNPs_hg38.tsv
+#   2. manifest rows for those SNPs, excluding chromosome 0 and XY
+#   3. convert_manifest_to_vcf.py -> per-SNP correction, sorted VCF
+# In : ARRAY_MANIFEST, DBSNP_HG38_VCF, DBSNP_HG19_VCF, HG19_FASTA
+# Out: TRIOS_DIR/manifest_qc/{HumanOmniExpressExome_8v1_2_SNPs_hg38.tsv, SNP_Table_8v1_2_subset.vcf.gz}
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+OUT=${TRIOS_DIR}/manifest_qc; mkdir -p "${OUT}"; cd "${OUT}"
+use_bcftools
+
+# 1. manifest SNP names found in dbSNP GRCh38
+awk -F'\t' 'NR > 1 {print $2}' "${ARRAY_MANIFEST}" | sort -u > snp_names.txt
+bcftools view --threads "${NCPU}" -i 'ID=@snp_names.txt' "${DBSNP_HG38_VCF}" -Ou \
+  | bcftools query -f '%ID\tchr%CHROM\t%POS\t%REF\t%ALT\n' \
+  | awk 'BEGIN{print "SNP_name\tCHROM\tPOS\tREF\tALT"} {print}' > HumanOmniExpressExome_8v1_2_SNPs_hg38.tsv
+
+# 2. manifest subset
+cut -f1 HumanOmniExpressExome_8v1_2_SNPs_hg38.tsv > hg38_snp_list.txt
+awk 'NR==FNR { keep[$1]; next } FNR==1 || $2 in keep' hg38_snp_list.txt "${ARRAY_MANIFEST}" \
+  | awk 'NR == 1 || ($3 != "0" && $3 != "XY")' > SNP_Table_8v1_2_subset.txt
+
+# 3. align to hg19 and write a sorted VCF with the dbSNP header
+python3 "${REPO}/01_genotype_prep/qc/convert_manifest_to_vcf.py" SNP_Table_8v1_2_subset.txt tmp_manifest.vcf
+{ bcftools view -h "${DBSNP_HG19_VCF}" | sed '/^##INFO/{x;/^$/{x;h;s/.*/##INFO=<ID=Correction,Number=1,Type=String,Description="Allele correction applied to match the reference">/;x;G;b};x}' | grep -v '^#CHROM'
+  grep '^#CHROM' tmp_manifest.vcf
+  grep -v '^#' tmp_manifest.vcf; } \
+  | bcftools sort -T "${OUT}" -Oz -o SNP_Table_8v1_2_subset.vcf.gz
+bcftools index -f -t SNP_Table_8v1_2_subset.vcf.gz
+rm -f tmp_manifest.vcf hg38_snp_list.txt
+bcftools query -f '%INFO/Correction\n' SNP_Table_8v1_2_subset.vcf.gz | sort | uniq -c > correction_counts.txt
+
+receipt 01_manifest_qc

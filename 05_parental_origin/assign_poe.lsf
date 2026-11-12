@@ -1,0 +1,18 @@
+#!/bin/bash
+# =============================================================================
+# Stage 05 | assign_poe.lsf
+# Maternal / paternal origin of each infant haplotype per chromosome (assign_POE.py).
+# In : TRIO_VCF_HG38 (unphased parents), TRIO_PED, IMPUTED_DIR/chr<N>.biallelic.filtered.vcf.gz
+# Out: HAP_ORIGIN, HAP_ORIGIN.votes.tsv
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+use_conda "${PYTHON_ENV}"          # python3 + bcftools
+chroms=$(printf 'chr%s,' ${AUTOSOMES}); chroms=${chroms%,}
+python3 "${REPO}/05_parental_origin/assign_POE.py" \
+  --unphased_vcf "${TRIO_VCF_HG38}" \
+  --ped "${TRIO_PED}" \
+  --phased_dir "${IMPUTED_DIR}" \
+  --out "${HAP_ORIGIN}" \
+  --chroms "${chroms}" \
+  --workers "${NCPU}"
+receipt 05_assign_poe

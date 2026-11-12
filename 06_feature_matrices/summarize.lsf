@@ -1,0 +1,11 @@
+#!/bin/bash
+# =============================================================================
+# Stage 06 | summarize.lsf      array: 1 = gene level, 2 = transcript level
+# Maternal / paternal count matrices (ornaments_summarizeToGene.R).
+# In : QUANT_DIR/<sample>/, HAP_ORIGIN, TX_CLASSIF, TXVCF_MERGED
+# Out: POE_GENE_COUNTS (element 1), POE_TX_COUNTS (element 2)
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+LEVEL=$(nth_word "${IDX}" gene transcript)
+run_step_r 06_feature_matrices/ornaments_summarizeToGene.R --level "${LEVEL}"
+receipt 06_summarize "${IDX}"

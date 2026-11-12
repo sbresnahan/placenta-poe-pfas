@@ -1,0 +1,13 @@
+bookdown::gitbook:
+  split_by: chapter
+  self_contained: false
+  includes:
+    in_header: mermaid.html
+  config:
+    toc:
+      collapse: section
+      before: |
+        <li><strong>placenta-poe-pfas</strong></li>
+    download: null
+    sharing: null
+    edit: null

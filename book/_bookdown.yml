@@ -1,0 +1,13 @@
+book_filename: "placenta-poe-pfas"
+output_dir: "../docs"
+delete_merged_file: true
+new_session: false
+language:
+  ui:
+    chapter_name: ""
+rmd_files:
+  - index.Rmd
+  - 01-workflow.Rmd
+  - 02-genotype-methods.Rmd
+  - 03-reports.Rmd
+  - 04-configuration.Rmd

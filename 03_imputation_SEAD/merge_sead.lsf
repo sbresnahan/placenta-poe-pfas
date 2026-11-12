@@ -1,0 +1,21 @@
+#!/bin/bash
+# =============================================================================
+# Stage 03 | merge_sead.lsf      array: one element per autosome
+# Merge the filtered infant imputations of all ancestry groups (sites present
+# in any group are kept; genotypes absent from a group are missing).
+# In : SEAD_DOWNLOAD_DIR/<group>_SEAD/chr<N>.biallelic.filtered.vcf.gz
+# Out: IMPUTED_DIR/chr<N>.biallelic.filtered.vcf.gz (+ .tbi)
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+CHR=$(nth_word "${IDX}" ${AUTOSOMES})
+mkdir -p "${IMPUTED_DIR}"
+use_bcftools
+
+inputs=()
+for g in ${ANCESTRY_GROUPS}; do inputs+=("${SEAD_DOWNLOAD_DIR}/${g}_SEAD/chr${CHR}.biallelic.filtered.vcf.gz"); done
+
+bcftools merge --threads "${NCPU}" -m all -Oz -o "${IMPUTED_DIR}/chr${CHR}.biallelic.filtered.vcf.gz" "${inputs[@]}"
+bcftools index -f -t "${IMPUTED_DIR}/chr${CHR}.biallelic.filtered.vcf.gz"
+
+log "chr${CHR}: $(bcftools index -n "${IMPUTED_DIR}/chr${CHR}.biallelic.filtered.vcf.gz") merged sites"
+receipt 03_merge "${IDX}"

@@ -1,0 +1,440 @@
+---
+title: "Statistical Methods for Analysis of Exposure-Induced Changes in Parent-of-Origin Expression"
+author: "Sean T. Bresnahan"
+date: "2025-08-26"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+  html_document:
+    toc: true
+    toc_depth: '2'
+    df_print: paged
+params:
+  fig_dir: "figures/methods"   # folder holding figure2.png ... figure16.png (relative to this Rmd)
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=F,warning=F,message=F)
+library(cowplot)
+
+# Pre-assembled figure panels; see figures/MANIFEST.tsv for the source of each
+# file and stage_figures.sh to copy them into params$fig_dir.
+fig_dir <- params$fig_dir
+fp <- function(f) file.path(fig_dir, f)
+needed <- paste0("figure", c(2:7, "7b", 8, "8b", 9, 10, "10b", 11, 12, "12b", 13, "13b",
+                             14, "14b", 15, "15b", 16), ".png")
+missing <- needed[!file.exists(fp(needed))]
+if (length(missing))
+  stop("Missing figure panels in '", normalizePath(fig_dir, mustWork = FALSE), "': ",
+       paste(missing, collapse = ", "),
+       "\nRun reports/stage_figures.sh first (see reports/README.md).", call. = FALSE)
+```
+
+# Sample Collection and Genotyping
+
+DNA samples were obtained from 732 fathers (buccal swabs), 1079 mothers (buffy coat from mid-gestation blood), and 1073 infants (umbilical cord tissue or blood) from the GUSTO cohort. Paternal DNA was extracted from Isohelix buccal swabs using ATL lysis buffer and proteinase K digestion followed by QIAsymphony DNA extraction. Maternal and infant DNA extraction procedures were as previously described.
+
+All samples were genotyped using the Illumina OmniExpressExome array covering approximately 1 million SNPs. Genotyping was performed by Expression Analysis, Inc., with data processing in GenomeStudio using GenCall software incorporating GenTrain clustering and Bayesian calling algorithms. Genotypes with GenCall scores <0.15 were excluded. Quality control filters removed samples with call rates <97%, cryptic relatedness, or sex/ethnicity discrepancies.
+
+# Genotype Processing and Phasing
+
+Genotype data were converted from PLINK format with MAJOR/MINOR allele codings to VCF with REF/ALT allele codings. Genotypes with multiple ALT alleles due to allele coding incompatibilities were filtered. Genomic coordinates were lifted from hg19 to hg38 reference, resulting in N=716,600 SNPs. Ancestry groups were inferred using principal components analysis on LD-pruned SNPs from 200 infant samples with known maternal ethnicity, followed by k-nearest neighbor classification (k=3) for samples with unknown ancestry.
+
+```{r, fig.width=12, fig.height=5, fig.align='center'}
+p1 <- ggdraw() + draw_image(fp("figure2.png"), scale = 1)
+p2 <- ggdraw() + draw_image(fp("figure3.png"), scale = 1)
+
+plot_grid(
+  p1, p2,
+  ncol = 2,
+  rel_widths = c(1, 1),  # adjust if one plot should be wider
+  align = "h"            # horizontal alignment
+)
+```
+
+Within each ancestry group, variants were filtered for missingness >5%, minor allele frequency <5%, and Hardy-Weinberg equilibrium p-value $<10^{-6}$. Trio genotypes were phased within pedigrees using Shapeit4, followed by imputation of infant genotypes using the SEAD reference panel on the Westlake Imputation Server. Post-imputation filtering retained biallelic variants with MAF $\geq1$% and imputation quality Rsq $\geq0.3$. High-quality biallelic variants were then merged across ancestry groups, resulting in a total of N=X bialleic variants for allele-specific expression analysis.
+
+# Allele-Specific Expression Quantification
+
+Personalized transcriptomes were created for each infant using Ornaments, incorporating the biallelic variants with our long-read transcriptome assembly of the term placenta. Allele-specific expression was quantified at each feature-SNP combination, where features represented either transcript isoforms (transcript-level analysis) or genes summarized using transcript usage-weighted aggregation across all genomic SNPs within the gene's union of transcripts (gene-level analysis).
+
+## Gene-Level Quantification with Transcript Usage Weighting
+
+For gene-level analysis, we implemented a tximport-inspired approach that accounts for transcript usage when aggregating allele-specific counts across genomic SNPs. This method ensures that genes with multiple isoforms are properly weighted according to their relative expression levels.
+
+### Transcript Usage Weight Calculation
+
+For each sample $s$, transcript usage weights within each gene $g$ were calculated from TPM values as:
+
+$$w_{gts} = \frac{\text{TPM}_{ts}}{\sum_{t \in T_g} \text{TPM}_{ts}}$$
+
+where $T_g$ represents all transcripts belonging to gene $g$. When all transcripts in a gene had zero TPM, equal weights were assigned: $w_{gts} = \frac{1}{|T_g|}$.
+
+### Gene-Level Count Aggregation
+
+Gene-level allele-specific counts were computed using a union-of-genomic-SNPs approach with transcript usage weighting. For each genomic SNP $n$ and allele $a$ (maternal or paternal), the gene-level count was calculated as:
+
+$$C_{gsna} = \sum_{t \in T(g,n)} w_{gts} \cdot X_{tsna}$$
+
+where:
+
+- $g$ = gene
+- $s$ = sample  
+- $n$ = genomic SNP (chr:pos)
+- $a$ = allele (maternal or paternal)
+- $T(g,n)$ = transcripts of gene $g$ containing SNP $n$
+- $X_{tsna}$ = allele-specific count from transcript $t$ at SNP $n$
+- $w_{gts}$ = transcript usage weight (derived from TPMs)
+
+This approach preserves the gene-SNP resolution necessary for downstream parent-of-origin expression modeling while appropriately down-weighting lowly expressed isoforms and up-weighting highly expressed ones. The final feature identifiers take the form "gene_id:pos".
+
+```{r, fig.width=12, fig.height=5, fig.align='center'}
+p1 <- ggdraw() + draw_image(fp("figure4.png"), scale = 1)
+p2 <- ggdraw() + draw_image(fp("figure5.png"), scale = 1)
+
+plot_grid(
+  p1, p2,
+  ncol = 2,
+  rel_widths = c(.9, 1.1),  # adjust if one plot should be wider
+  align = "h"            # horizontal alignment
+)
+```
+
+Parent-of-origin assignment for each allele was performed using a deterministic voting algorithm that compared phased infant genotypes to unphased parental genotypes. For each chromosome, a parental panel was constructed from biallelic variant positions with <10% missingness across parent samples. Informative positions were identified where parents were homozygous for different alleles. Haplotype assignments were made by majority vote across all informative positions.
+
+# Within-Sample Parent-of-Origin Expression Testing
+
+To identify features showing parent-of-origin expression bias within individual samples, we performed hierarchical statistical testing combining exact binomial tests with the Aggregated Cauchy Association Test (ACAT). For each sample and feature combination, we first conducted exact binomial tests at individual SNP positions, testing the null hypothesis that maternal and paternal alleles are equally expressed (p = 0.5). Count data were rounded to integers for the exact test.
+
+Within each sample-feature combination, p-values from individual SNP tests were combined using ACAT, which is robust to dependence among tests. The ACAT statistic was calculated as:
+
+$$T_{\text{ACAT}} = \sum_{i=1}^{k} w_i \tan\left((0.5 - p_i) \pi\right)$$
+
+where $p_i$ represents the p-value from SNP $i$, $w_i$ are weights (based on read depth per SNP), and $k$ is the number of informative SNPs. The combined p-value was computed as:
+
+$$p_{\text{ACAT}} = 0.5 - \frac{\arctan(T_{\text{ACAT}})}{\pi}$$
+
+False discovery rate correction was applied across all features within each sample using the Benjamini-Hochberg procedure. Features were classified as showing parent-of-origin expression if the FDR-adjusted ACAT p-value was $\leq 0.1$ and the maternal expression ratio was <0.1 or >0.9, indicating strong bias toward one parent.
+
+```{r, fig.width=12, fig.height=8, fig.align='center'}
+p1 <- ggdraw() + draw_image(fp("figure6.png"), scale = 1)
+p2 <- ggdraw() + draw_image(fp("figure7.png"), scale = 1)
+
+plot_grid(
+  p1, p2,
+  ncol = 1,
+  rel_widths = c(1, 1),  # adjust if one plot should be wider
+  align = "h"            # horizontal alignment
+)
+```
+
+# NB-GLMM Parent-of-Origin Expression Statistical Testing Framework
+
+## Data Structure and Preprocessing
+
+Allele-specific read counts were obtained at heterozygous SNP positions within each gene or transcript. The resulting count matrix contained rows representing feature-SNP combinations (formatted as `feature_id:SNPpos`) and columns representing sample-allele pairs (`sample_maternal` and `sample_paternal`). For feature *i* and sample *j*, we denoted maternal allele counts as $M_{ij}$ and paternal allele counts as $P_{ij}$.
+
+Library size normalization was performed using a modified DESeq2 approach. Size factors were calculated from the combined maternal and paternal counts $(M_{ij} + P_{ij})$ using geometric means across features, with the geometric mean defined as:
+
+$$\tilde{Y}_i = \exp\left(\frac{1}{n}\sum_j \log(Y_{ij})\right)$$
+
+for counts $Y_{ij} > 0$. The size factor for sample *j* was computed as the median of ratios $Y_{ij}/\tilde{Y}_i$ across all features with positive geometric means, then normalized to have a geometric mean of 1 across all samples.
+
+## Core Parent-of-Origin Expression Model
+
+To identify features with consistent parent-of-origin expression patterns across the cohort, we used negative binomial generalized linear mixed models (NB-GLMM) testing the main effect of allele ($\beta_{\text{POE}}$) to account for the overdispersed nature of count data while controlling for technical and biological confounders.
+
+Our core model fits allele-specific counts using a negative binomial distribution: 
+
+$$Y_{ijk} \sim \text{NB}(\mu_{ijk}, \phi)$$
+
+where $Y_{ijk}$ represents the count for feature *i*, sample *j*, and allele *k* (maternal or paternal), $\mu_{ijk}$ is the expected count, and $\phi$ is the dispersion parameter. The log-linear predictor was specified as:
+
+$$\log(\mu_{ijk}) = \log(s_j) + \beta_0 + \beta_{\text{POE}} \cdot I(\text{allele}_k = \text{paternal}) + \beta_{\text{sex}} \cdot \text{sex}_j + \beta_{\text{ethnicity}} \cdot \text{maternal\_ethnicity}_j + \text{random effects}$$
+
+where $\mu_{ijk}$ is the expected count for feature $i$, sample $j$, and allele $k$, and $s_j$ is the library size offset for sample $j$.
+
+Fixed effects included:
+
+- $\beta_{\text{POE}}$: parent-of-origin effect (primary parameter of interest)
+- $\beta_{\text{sex}}$: sex effect
+- $\beta_{\text{ethnicity}}$: maternal ethnicity effect
+
+Random effects were included to account for correlation structure in the data: $(1|\text{SNPpos})$ for SNP-specific effects within features and $(1|\text{sample})$ for sample-specific effects. Models were fit using the glmmTMB package in R with the nbinom2 parameterization of the negative binomial family.
+
+## Statistical Inference
+
+The primary hypothesis test examined the significance of the parent-of-origin effect: $H_0: \beta_{\text{POE}} = 0$ versus $H_1: \beta_{\text{POE}} \neq 0$. We used Wald z-tests with the test statistic:
+
+$$z = \frac{\hat{\beta}_{\text{POE}}}{\text{SE}(\hat{\beta}_{\text{POE}})}$$
+
+with corresponding p-value:
+
+$$p_{\text{POE}} = 2 \times \Phi(-|z|)$$
+
+where $\Phi$ is the standard normal cumulative distribution function.
+
+## Multiple Testing Correction and Classification
+
+We applied the Benjamini-Hochberg procedure to control the false discovery rate across all tested features. Q-values were calculated as:
+
+$$q_{\text{POE},i} = \min\left(1, \frac{p_{\text{POE},i} \times m}{\text{rank}(p_{\text{POE},i})}\right)$$
+
+where $m$ is the total number of features tested.
+
+Additional filters required a minimum number of SNP positions per feature, sufficient sample sizes, and adequate total read counts to ensure reliable parameter estimation. Features were classified as showing significant parent-of-origin expression if they met the following criteria: FDR-adjusted p-value q < 0.10 and the lower bound of the 95% confidence interval for |$\beta_{\text{POE}}$| > log(1.5), corresponding to at least a 1.5-fold change in odds ratio, i.e., a 60:40 allelic ratio, with high confidence.
+
+## Relationship between $\beta_{\text{POE}}$, log fold change, and allelic ratio
+
+```{r, fig.width=7, fig.height=5, fig.align='center'}
+p1 <- ggdraw() + draw_image(fp("figure7b.png"), scale = 1)
+plot_grid(
+  p1,
+  ncol = 1,
+  align = "hv"
+)
+```
+
+The parent-of-origin effect parameter $\beta_{\text{POE}}$ from our negative binomial model has a direct mathematical relationship to biologically interpretable measures of allelic imbalance.
+
+### Mathematical Framework
+
+In our NB-GLMM, $\beta_{\text{POE}}$ represents the log-ratio of expected counts:
+
+$$\beta_{\text{POE}} = \log\left(\frac{\mu_{\text{paternal}}}{\mu_{\text{maternal}}}\right)$$
+
+where $\mu_{\text{paternal}}$ and $\mu_{\text{maternal}}$ are the expected expression levels for paternal and maternal alleles, respectively.
+
+### Conversion to Odds Ratio
+
+The exponential of $\beta_{\text{POE}}$ gives the **odds ratio** (or fold change):
+
+$$e^{\beta_{\text{POE}}} = \frac{\mu_{\text{paternal}}}{\mu_{\text{maternal}}}$$
+
+This represents how many times higher (or lower) paternal expression is compared to maternal expression. For example:
+
+- $e^{\beta_{\text{POE}}} = 2.0$ means paternal allele is expressed twice as much as maternal
+- $e^{\beta_{\text{POE}}} = 0.5$ means paternal allele is expressed half as much as maternal
+
+### Conversion to Allelic Ratios
+
+To obtain the proportion of total expression from each allele, we use the logistic transformation:
+
+$$P_{\text{paternal}} = \frac{e^{\beta_{\text{POE}}}}{1 + e^{\beta_{\text{POE}}}} = \text{plogis}(\beta_{\text{POE}})$$
+
+$$P_{\text{maternal}} = \frac{1}{1 + e^{\beta_{\text{POE}}}} = 1 - P_{\text{paternal}}$$
+
+These proportions can be converted to the familiar paternal:maternal ratio format by multiplying by 100 and rounding.
+
+### Biological Interpretation Thresholds
+
+Our significance criteria require $|\beta_{\text{POE}}| > \log(1.5) \approx 0.405$, which corresponds to:
+
+- **Minimum effect size**: 60:40 allelic ratio (1.5-fold difference)
+- **Moderate imprinting**: $|\beta_{\text{POE}}| \approx 2$ gives ~88:12 ratio (7-fold difference)  
+- **Strong imprinting**: $|\beta_{\text{POE}}| \approx 4$ gives ~98:2 ratio (54-fold difference)
+- **Near-complete silencing**: $|\beta_{\text{POE}}| > 6$ gives >99.5% bias
+
+This mathematical framework allows direct conversion between the regression coefficient from our statistical model and biologically meaningful measures of parent-of-origin expression bias.
+
+## Results: Baseline POE
+
+### Gene level
+
+```{r, fig.width=12, fig.height=8, fig.align='center'}
+p1 <- ggdraw() + draw_image(fp("figure8.png"), scale = 1)
+p2 <- ggdraw() + draw_image(fp("figure8b.png"), scale = 1)
+p3 <- ggdraw() + draw_image(fp("figure9.png"), scale = 1)
+
+top_row <- plot_grid(p1, p2, ncol = 2)
+
+# center p3 by giving it an empty placeholder
+bottom_row <- plot_grid(NULL, p3, NULL, ncol = 3, rel_widths = c(1, 2, 1))
+
+plot_grid(
+  top_row,
+  bottom_row,
+  ncol = 1,
+  rel_heights = c(1, 1)
+)
+```
+
+### Transcript level
+
+```{r, fig.width=12, fig.height=8, fig.align='center'}
+p1 <- ggdraw() + draw_image(fp("figure10.png"), scale = 1)
+p2 <- ggdraw() + draw_image(fp("figure10b.png"), scale = 1)
+p3 <- ggdraw() + draw_image(fp("figure11.png"), scale = 1)
+
+top_row <- plot_grid(p1, p2, ncol = 2)
+
+# center p3 by giving it an empty placeholder
+bottom_row <- plot_grid(NULL, p3, NULL, ncol = 3, rel_widths = c(1, 2, 1))
+
+plot_grid(
+  top_row,
+  bottom_row,
+  ncol = 1,
+  rel_heights = c(1, 1)
+)
+```
+
+Notably, the imprinted gene MEG3 is revealed only with isoform-resolved analysis.
+
+## Validation Against Known Imprinted Genes
+
+To validate our parent-of-origin expression detection methods, we tested for enrichment of identified parent-biased genes among documented imprinted genes from the Geneimprint database. We performed Fisher's exact test using a 2x2 contingency table comparing the overlap between our parent-biased gene set and known imprinted genes versus the background of all expressed genes. Of the 12,302 expressed genes, 33 showed significant parent-of-origin expression bias. Of these, we recovered 3 of 144 known imprinted genes (per GeneImprintDB), a significant enrichment (p = .005, OR = 9.07).
+
+# PFAS Modulation of Parent-of-Origin Expression
+
+## Extended Statistical Framework
+
+We developed a statistical framework to quantify how maternal or fetal PFAS concentrations modify parent-of-origin expression (POE) patterns using allele-specific RNA sequencing data. Our approach employs the same NB-GLMM framework as the core POE model with modifications to include PFAS interaction effects. To illustrate the method, we focus on maternal PFBS exposure, standardized to have mean zero and unit variance before analysis to facilitate interpretation of interaction effects as changes per standard deviation of exposure.
+
+The log-linear predictor was specified as:
+
+$$
+\begin{aligned}
+\log(\mu_{ijk}) &= \log(s_j) + \beta_0 + \beta_{\text{POE}} \cdot I(\text{allele}_k=\text{paternal}) + \beta_{\text{cond}} \cdot X_j \\
+&\quad + \beta_{\text{int}} \cdot I(\text{allele}_k=\text{paternal}) \cdot X_j + \beta_{\text{sex}} \cdot \text{sex}_j + \beta_{\text{ethnicity}} \cdot \text{maternal\_ethnicity}_j + \text{(random effects)}
+\end{aligned}
+$$
+
+Here, $s_j$ represents the size factor for sample *j*, $X_j$ denotes the standardized maternal PFAS concentration, and $I(\cdot)$ is an indicator function. The fixed effects include $\beta_0$ (baseline maternal allele expression), $\beta_{\text{POE}}$ (main parent-of-origin effect representing the log-ratio of paternal to maternal expression at the reference PFAS level of zero), $\beta_{\text{cond}}$ (main effect of PFAS concentration on maternal allele expression), $\beta_{\text{int}}$ (the interaction term quantifying how parent-of-origin expression changes per standard deviation increase in maternal PFAS concentration).
+
+Random effects were included to account for correlation structure in the data: $(1|\text{SNPpos})$ for SNP-specific effects within features and $(1|\text{sample})$ for sample-specific effects.
+
+## Quantification of Parent-of-Origin Effects
+
+Parent-of-origin expression was quantified as the log-odds of paternal versus maternal expression. At the reference PFAS level (standardized concentration of zero), the POE effect was $\beta_{\text{POE}}$. For a given PFAS concentration $X$, the POE effect was:
+
+$$\beta_{\text{POE}}(X) = \beta_{\text{POE}} + \beta_{\text{int}} \cdot X$$
+
+## Effect Size Metrics
+
+We examined the interaction effect to characterize PFAS-dependent changes in parent-of-origin expression:
+
+$$\Delta\beta_{\text{POE}} = \beta_{\text{int}}$$
+
+representing the change in POE per standard deviation increase in maternal PFAS concentration.
+
+To distinguish between strengthening and attenuation of existing imprinting patterns, we calculated the change in POE magnitude with 1 SD PFAS exposure. This requires computing POE effects at two PFAS exposure states. We defined:
+
+$$\beta_{\text{ref}} = \beta_{\text{POE}}$$
+
+(POE at the reference level of zero after standardization) and:
+
+$$\beta_{\text{after}} = \beta_{\text{ref}} + \beta_{\text{int}} \times 1$$
+
+representing the POE effect at one standard deviation above the mean PFAS concentration.
+
+For visualization and interpretation purposes, we computed confidence intervals for $\beta_{\text{after}}$ using parametric bootstrap methods, allowing direct comparison of POE effect sizes between reference and elevated PFAS exposure states. 
+
+The confidence intervals were derived by drawing $B = 100$ samples from the multivariate normal distribution of the estimated coefficients:
+
+$$\begin{pmatrix} \hat{\beta}_{\text{ref}} \\ \hat{\beta}_{\text{int}} \end{pmatrix} \sim N\left(\begin{pmatrix} \beta_{\text{ref}} \\ \beta_{\text{int}} \end{pmatrix}, \mathbf{V}\right)$$
+
+where $\mathbf{V}$ is the variance-covariance matrix of the coefficient estimates. For each bootstrap draw $b$, we computed:
+
+$$\beta_{\text{after}}^{(b)} = \beta_{\text{ref}}^{(b)} + \beta_{\text{int}}^{(b)} \times \Delta$$
+
+where $\Delta$ represents the step size for the condition variable (1 standard deviation for continuous variables, or 1 for binary variables). The 95% confidence interval for $\beta_{\text{after}}$ was then constructed as:
+
+$$\text{CI}_{95\%}(\beta_{\text{after}}) = \hat{\beta}_{\text{after}} \pm 1.96 \times \text{SE}(\beta_{\text{after}})$$
+
+where $\text{SE}(\beta_{\text{after}}) = \text{sd}(\{\beta_{\text{after}}^{(b)}\}_{b=1}^{B})$ is the standard deviation across bootstrap draws.
+
+While we do not perform formal hypothesis testing on $\beta_{\text{after}}$, these estimates provide intuitive context for understanding the biological magnitude of PFAS-dependent changes in parent-of-origin expression patterns.
+
+## Statistical Inference
+
+The primary hypothesis test examined the significance of the PFAS-POE interaction: $H_0: \beta_{\text{int}} = 0$ versus $H_1: \beta_{\text{int}} \neq 0$. We used Wald z-tests with the test statistic:
+
+$$z = \frac{\hat{\beta}_{\text{int}}}{\text{SE}(\hat{\beta}_{\text{int}})}$$
+
+with corresponding p-value:
+
+$$p_{\text{POE}} = 2 \times \Phi(-|z|)$$
+
+where $\Phi$ is the standard normal cumulative distribution function.
+
+## Multiple Testing Correction and Classification
+
+We applied the Benjamini-Hochberg procedure to control the false discovery rate across all tested features within each PFAS analysis separately for interaction effects and modulation effects. For interaction effects, q-values were calculated as:
+
+$$q_{\text{int},i} = \min\left(1, \frac{p_{\text{int},i} \times m}{\text{rank}(p_{\text{int},i})}\right)$$
+
+where $m$ is the total number of tests within each analysis.
+
+For interaction effects, we required statistical significance ($q_{\text{int}} \leq 0.10$) and that the lower bound of the 95% confidence interval for $|\beta_{\text{int}}|$ exceeded $\log(1.5)$: 
+
+$$|\hat{\beta}_{\text{int}}| - 1.96 \times \text{SE}(\hat{\beta}_{\text{int}}) > \log(1.5)$$
+
+This confidence interval criterion ensures that the interaction effect corresponds to at least a 1.5-fold change in odds ratio, e.g. a shift in allelic ratio from either 60:40 or 40:60 to 50:50, with high confidence per standard deviation increase in PFAS concentration. In other words, "does PFAS exposure influence POE at all?"
+
+Additional filters required a minimum number of SNP positions per feature, sufficient sample sizes, and adequate total read counts to ensure reliable parameter estimation. Features passing significance criteria were classified as showing biologically meaningful PFAS-dependent changes in parent-of-origin expression patterns. Positive interaction coefficients indicated that increasing maternal PFAS concentrations shift expression toward paternal bias, while negative coefficients indicated shifts toward maternal bias. Comparing $\beta_{\text{ref}}$ to $\beta_{\text{after}}$ helps to visualize the change in POE magnitude per 1 SD exposure.
+
+## Results: POE by Maternal PFBS
+
+### Gene level
+
+```{r, fig.width=12, fig.height=8, fig.align='center'}
+p1 <- ggdraw() + draw_image(fp("figure12.png"), scale = 1)
+p2 <- ggdraw() + draw_image(fp("figure12b.png"), scale = 1)
+p3 <- ggdraw() + draw_image(fp("figure13.png"), scale = 1)
+p4 <- ggdraw() + draw_image(fp("figure13b.png"), scale = 1)
+
+plot_grid(
+  p1,p2,p3,p4,
+  ncol = 2,
+  nrow = 2
+)
+```
+
+### Transcript level
+
+```{r, fig.width=12, fig.height=8, fig.align='center'}
+p1 <- ggdraw() + draw_image(fp("figure14.png"), scale = 1)
+p2 <- ggdraw() + draw_image(fp("figure14b.png"), scale = 1)
+p3 <- ggdraw() + draw_image(fp("figure15.png"), scale = 1)
+p4 <- ggdraw() + draw_image(fp("figure15b.png"), scale = 1)
+
+plot_grid(
+  p1,p2,p3,p4,
+  ncol = 2,
+  nrow = 2
+)
+```
+
+# Next Steps: Addressing Unmeasured Confounding
+
+While our NB-GLMM framework identified PFAS-dependent modulation of parent-of-origin expression, QQ plots revealed evidence of residual inflation, suggesting that unmeasured confounding remains a challenge. This concern is also reflected in our DAG, which highlights latent factors such as family/SES (U2) and shared maternal-fetal exposures (U1) that cannot be fully captured with currently measured covariates. Standard fixed- and random-effect adjustments for sex, ancestry, and batch do not adequately resolve these biases.
+
+```{r, fig.width=7, fig.height=5, fig.align='center'}
+p1 <- ggdraw() + draw_image(fp("figure16.png"), scale = 1)
+
+plot_grid(
+  p1,
+  ncol = 1,
+  align = "hv"
+)
+```
+
+To strengthen causal inference, our next phase of analysis will incorporate negative control approaches recently evaluated by Huang et al. in the context of reproductive genomics. Specifically:
+
+### Control Outcome Calibration (COCA):
+We will use molecular measures outside the hypothesized causal pathway as negative control outcomes—for example, maternal-predicted transcription (W in the DAG) or corresponding maternal methylation sites that share confounders with placental expression but are not directly affected by fetal PFAS. By calibrating POE effect estimates against these controls, we can partially correct for unmeasured maternal and family-level confounders.
+
+### Proximal g-Computation (PGC):
+Building on the COCA framework, we will extend to proximal causal learning using both treatment-inducing proxies (e.g., maternal methylation profiles correlated with PFAS exposure) and outcome-inducing proxies (e.g., maternal-predicted transcription or matched maternal epigenomic features). PGC allows for effect estimation in the presence of unobserved confounders under completeness assumptions, providing an additional robustness check beyond simple regression adjustment.
+
+### Integration into Experimental Design:
+Because our trio-based design already provides phased infant genotypes and matched maternal/cord blood PFAS measures, we are well-positioned to leverage maternal molecular profiles as negative controls. Parallel analyses will compare (i) standard NB-GLMM, (ii) COCA-adjusted estimates, and (iii) PGC-based estimates, enabling us to evaluate the extent of confounding bias and assess robustness of identified PFAS–POE associations.
+
+### Simulation-Guided Validation with GANs:
+To assess performance of these methods under realistic confounding structures, we will employ generative adversarial networks (GANs) to simulate datasets that preserve the high-dimensional correlations and allele-specific count distributions observed in our study. This approach extends the plasmode simulation framework by capturing complex, nonparametric dependencies across genotype, expression, and exposure variables. GAN-generated cohorts will allow us to systematically vary the strength and structure of unmeasured confounding, test whether COCA and PGC reduce bias in POE estimates, and calibrate our significance thresholds to account for inflation observed in QQ plots.
+
+### Conclusion
+In summary, applying negative control calibration and proximal g-computation—validated through GAN-based simulations—will allow us to move beyond exploratory association testing toward a more causal interpretation of PFAS effects on placental imprinting. This framework will help ensure that observed POE modifications reflect true biological responses rather than latent confounding, laying the foundation for translational insights into exposure-related risks for neurodevelopmental outcomes.

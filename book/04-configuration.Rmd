@@ -1,0 +1,17 @@
+# Configuration {#config-files}
+
+All paths, environments and analysis parameters are set in `config/paths.sh`;
+LSF resources in `config/resources.sh`. Any value can be overridden by
+exporting the variable before running `run_pipeline.sh`.
+
+## config/paths.sh
+
+```{r, results = "asis"}
+show_file("../config/paths.sh")
+```
+
+## config/resources.sh
+
+```{r, results = "asis"}
+show_file("../config/resources.sh")
+```

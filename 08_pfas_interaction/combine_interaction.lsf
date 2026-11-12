@@ -1,0 +1,10 @@
+#!/bin/bash
+# =============================================================================
+# Stage 08 | combine_interaction.lsf
+# Gather batch results; BH within each level x condition.
+# In : BATCH_DIR/results/interaction_*.rds
+# Out: MODEL_DIR/poe_by_condition_<level>_<condition>.rds
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+run_step_r 08_pfas_interaction/combine_interaction.R
+receipt 08_combine

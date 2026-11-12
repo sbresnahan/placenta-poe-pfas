@@ -1,0 +1,5 @@
+# Workflow {#workflow}
+
+```{r, results = "asis"}
+include_md("../WORKFLOW.md")
+```

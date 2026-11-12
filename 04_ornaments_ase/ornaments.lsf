@@ -1,0 +1,40 @@
+#!/bin/bash
+# =============================================================================
+# Stage 04 | ornaments.lsf      array: one element per RNA-seq infant (line of INFANT_SAMPLES)
+# Allele-specific transcript quantification with Ornaments:
+#   1. the infant's phased heterozygous transcriptomic variants
+#   2. personalised ("ornament") transcriptome + index
+#   3. ornaments quant on the infant's paired-end placental RNA-seq
+# In : TXVCF_MERGED, TX_FASTA, FASTQ_DIR/J<fastq id>_{1,2}.fq.gz, FASTQ_ID_MAP (<SubjectID> <fastq id>)
+# Out: QUANT_DIR/<sample>/, TXOME_DIR/<sample>/<sample>.filtered.vcf
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+N=$(wc -l < "${INFANT_SAMPLES}")
+if (( IDX > N )); then log "index ${IDX} > ${N} samples; nothing to do"; receipt 04_ornaments "${IDX}"; exit 0; fi
+LIBID=$(sed -n "${IDX}p" "${INFANT_SAMPLES}")
+SUBJECT=${LIBID%%_*}
+FASTQ_ID=J$(awk -v id="${SUBJECT}" '$1 == id { print $2 }' "${FASTQ_ID_MAP}")
+R1="${FASTQ_DIR}/${FASTQ_ID}_1.fq.gz"; R2="${FASTQ_DIR}/${FASTQ_ID}_2.fq.gz"
+[[ -s "${R1}" && -s "${R2}" ]] || { log "FASTQ missing for ${LIBID} (${FASTQ_ID})"; exit 1; }
+
+T="${TXOME_DIR}/${LIBID}"
+mkdir -p "${T}" "${QUANT_DIR}"
+log "sample ${LIBID} (fastq ${FASTQ_ID})"
+
+# 1. phased heterozygous sites of this infant
+use_bcftools
+bcftools view -s "${LIBID}" -g het -p -Ov -o "${T}/${LIBID}.filtered.vcf" "${TXVCF_MERGED}"
+log "phased het sites: $(grep -vc '^#' "${T}/${LIBID}.filtered.vcf")"
+set +u; conda deactivate; set -u
+
+# 2-3. personalised transcriptome, index, quantification
+use_venv "${ORNAMENTS_VENV}"
+create_personalized_transcriptome -f "${TX_FASTA}" -v "${T}/${LIBID}.filtered.vcf" \
+  -t ornament -o "${T}/${LIBID}.ornament.fa" -s "${LIBID}"
+ornaments index -i "${T}/${LIBID}.index" "${T}/${LIBID}.ornament.fa"
+/usr/bin/time -v ornaments quant -i "${T}/${LIBID}.index" -o "${QUANT_DIR}/${LIBID}" \
+  --vcf "${T}/${LIBID}.filtered.vcf" --sample "${LIBID}" --threads "${NCPU}" "${R1}" "${R2}"
+
+[[ -n "$(ls -A "${QUANT_DIR}/${LIBID}" 2>/dev/null)" ]]
+[[ "${KEEP_TXOME_INDEX}" == "1" ]] || rm -rf "${T}/${LIBID}.index" "${T}/${LIBID}.ornament.fa"
+receipt 04_ornaments "${IDX}"

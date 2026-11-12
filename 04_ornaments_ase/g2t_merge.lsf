@@ -1,0 +1,36 @@
+#!/bin/bash
+# =============================================================================
+# Stage 04 | g2t_merge.lsf
+# Merge per-chromosome transcriptomic VCFs for the RNA-seq infants, give the
+# result a valid header (FORMAT definitions + one contig line per transcript),
+# then bgzip and index it so each Ornaments job can extract one sample quickly.
+# In : TXVCF_DIR/chr<N>.txomic.vcf, INFANT_SAMPLES, TX_CLASSIF (isoform, ..., length in col 4)
+# Out: TXVCF_MERGED (+ .csi)
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+TMP=$(mktemp -d "${TXVCF_DIR}/tmp.merge.XXXX"); trap 'rm -rf "${TMP}"' EXIT
+
+for c in ${AUTOSOMES}; do echo "${TXVCF_DIR}/chr${c}.txomic.vcf"; done > "${TMP}/vcf_list.txt"
+
+use_venv "${ORNAMENTS_VENV}"
+merge_transcriptome_vcfs -i "${TMP}/vcf_list.txt" -o "${TMP}/merged.vcf" -s "${INFANT_SAMPLES}"
+set +u; deactivate; set -u
+
+{
+  cat <<'EOF'
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=HDS,Number=.,Type=Float,Description="Haplotype dosages">
+##FORMAT=<ID=GP,Number=G,Type=Float,Description="Genotype probabilities">
+##FORMAT=<ID=DS,Number=1,Type=Float,Description="Dosage">
+EOF
+  awk -F'\t' 'NR > 1 { print "##contig=<ID=" $1 ",length=" $4 ">" }' "${TX_CLASSIF}"
+  grep -m1 '^#CHROM' "${TMP}/merged.vcf"
+  grep -v '^#' "${TMP}/merged.vcf"
+} > "${TMP}/fixed.vcf"
+
+use_bcftools
+bcftools sort -T "${TMP}" -Oz -o "${TXVCF_MERGED}" "${TMP}/fixed.vcf"
+bcftools index -f "${TXVCF_MERGED}"
+log "transcriptomic sites: $(bcftools index -n "${TXVCF_MERGED}"); samples: $(bcftools query -l "${TXVCF_MERGED}" | wc -l)"
+receipt 04_g2t_merge

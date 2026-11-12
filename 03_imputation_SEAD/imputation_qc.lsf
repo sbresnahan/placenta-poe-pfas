@@ -1,0 +1,45 @@
+#!/bin/bash
+# =============================================================================
+# Stage 03 | imputation_qc.lsf      (qc)
+# Site counts per ancestry group and chromosome before / after filtering and
+# after merging (read from the tabix indexes), imputed-MAF distributions from
+# the server .info files, and variant density per kb (imputation_qc.R).
+# In : SEAD_DOWNLOAD_DIR/<group>_SEAD/chr<N>.{SEAD.GRCh38.dose.vcf.gz,biallelic.filtered.vcf.gz,info}
+#      IMPUTED_DIR/chr<N>.biallelic.filtered.vcf.gz, HG38_FASTA.fai
+# Out: WORK_DIR/imputation_site_counts.tsv, WORK_DIR/imputation_maf.tsv, figures in FIG_DIR
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+use_bcftools
+
+n_sites() { if [[ -s "$1" ]]; then bcftools index -n "$1" 2>/dev/null || zgrep -vc '^#' "$1"; else echo NA; fi; }
+
+COUNTS="${WORK_DIR}/imputation_site_counts.tsv"
+{
+  printf 'group\tchr\tdose\tfiltered\n'
+  for g in ${ANCESTRY_GROUPS}; do
+    for c in ${AUTOSOMES}; do
+      d="${SEAD_DOWNLOAD_DIR}/${g}_SEAD"
+      printf '%s\t%s\t%s\t%s\n' "${g}" "${c}" \
+        "$(n_sites "${d}/chr${c}.SEAD.GRCh38.dose.vcf.gz")" "$(n_sites "${d}/chr${c}.biallelic.filtered.vcf.gz")"
+    done
+  done
+  for c in ${AUTOSOMES}; do
+    printf 'merged\t%s\tNA\t%s\n' "${c}" "$(n_sites "${IMPUTED_DIR}/chr${c}.biallelic.filtered.vcf.gz")"
+  done
+} > "${COUNTS}"
+
+# imputed MAF per group from the .info files (sites file, MAF in INFO)
+MAF="${WORK_DIR}/imputation_maf.tsv"
+printf 'group\tchr\tMAF\tR2\n' > "${MAF}"
+for g in ${ANCESTRY_GROUPS}; do
+  for c in ${AUTOSOMES}; do
+    f="${SEAD_DOWNLOAD_DIR}/${g}_SEAD/chr${c}.info"
+    [[ -s "${f}" ]] || f="${f}.gz"
+    [[ -s "${f}" ]] || continue
+    bcftools query -f "${g}\t${c}\t%INFO/MAF\t%INFO/R2\n" "${f}" 2>/dev/null >> "${MAF}" \
+      || log "could not parse ${f}"
+  done
+done
+
+run_step_r 03_imputation_SEAD/imputation_qc.R
+receipt 03_qc

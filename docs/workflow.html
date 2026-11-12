@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>1 Workflow | Parent-of-origin effects and PFAS exposure in human placenta</title>
+  <meta name="description" content="Workflow, methods and reports of the placenta POE x PFAS project" />
+  <meta name="generator" content="bookdown 0.48 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="1 Workflow | Parent-of-origin effects and PFAS exposure in human placenta" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Workflow, methods and reports of the placenta POE x PFAS project" />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="1 Workflow | Parent-of-origin effects and PFAS exposure in human placenta" />
+  
+  <meta name="twitter:description" content="Workflow, methods and reports of the placenta POE x PFAS project" />
+  
+
+<meta name="author" content="Sean T. Bresnahan" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="index.html"/>
+<link rel="next" href="genotyping-methods.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+</script>
+<style>
+  .report-frame { width: 100%; height: 85vh; border: 1px solid #ddd; }
+  .mermaid { text-align: center; }
+</style>
+
+
+<style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><strong>placenta-poe-pfas</strong></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Overview</a></li>
+<li class="chapter" data-level="1" data-path="workflow.html"><a href="workflow.html"><i class="fa fa-check"></i><b>1</b> Workflow</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="workflow.html"><a href="workflow.html#study-design-in-one-paragraph"><i class="fa fa-check"></i><b>1.1</b> 1. Study design in one paragraph</a></li>
+<li class="chapter" data-level="1.2" data-path="workflow.html"><a href="workflow.html#pipeline-at-a-glance"><i class="fa fa-check"></i><b>1.2</b> 2. Pipeline at a glance</a>
+<ul>
+<li class="chapter" data-level="1.2.1" data-path="workflow.html"><a href="workflow.html#step-registry"><i class="fa fa-check"></i><b>1.2.1</b> Step registry</a></li>
+</ul></li>
+<li class="chapter" data-level="1.3" data-path="workflow.html"><a href="workflow.html#before-the-first-run"><i class="fa fa-check"></i><b>1.3</b> 3. Before the first run</a>
+<ul>
+<li class="chapter" data-level="1.3.1" data-path="workflow.html"><a href="workflow.html#software"><i class="fa fa-check"></i><b>1.3.1</b> 3.1 Software</a></li>
+<li class="chapter" data-level="1.3.2" data-path="workflow.html"><a href="workflow.html#configuration"><i class="fa fa-check"></i><b>1.3.2</b> 3.2 Configuration</a></li>
+<li class="chapter" data-level="1.3.3" data-path="workflow.html"><a href="workflow.html#required-inputs"><i class="fa fa-check"></i><b>1.3.3</b> 3.3 Required inputs</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="workflow.html"><a href="workflow.html#running-the-pipeline"><i class="fa fa-check"></i><b>1.4</b> 4. Running the pipeline</a>
+<ul>
+<li class="chapter" data-level="1.4.1" data-path="workflow.html"><a href="workflow.html#the-sead-imputation-step-manual"><i class="fa fa-check"></i><b>1.4.1</b> 4.1 The SEAD imputation step (manual)</a></li>
+<li class="chapter" data-level="1.4.2" data-path="workflow.html"><a href="workflow.html#other-manual-points"><i class="fa fa-check"></i><b>1.4.2</b> 4.2 Other manual points</a></li>
+<li class="chapter" data-level="1.4.3" data-path="workflow.html"><a href="workflow.html#a-full-run-from-raw-data"><i class="fa fa-check"></i><b>1.4.3</b> 4.3 A full run from raw data</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="workflow.html"><a href="workflow.html#stage-by-stage-methods"><i class="fa fa-check"></i><b>1.5</b> 5. Stage-by-stage methods</a>
+<ul>
+<li class="chapter" data-level="1.5.1" data-path="workflow.html"><a href="workflow.html#stage-00---references"><i class="fa fa-check"></i><b>1.5.1</b> Stage 00 - references</a></li>
+<li class="chapter" data-level="1.5.2" data-path="workflow.html"><a href="workflow.html#stage-01---genotype-preparation"><i class="fa fa-check"></i><b>1.5.2</b> Stage 01 - genotype preparation</a></li>
+<li class="chapter" data-level="1.5.3" data-path="workflow.html"><a href="workflow.html#stage-02---ancestry-and-phasing"><i class="fa fa-check"></i><b>1.5.3</b> Stage 02 - ancestry and phasing</a></li>
+<li class="chapter" data-level="1.5.4" data-path="workflow.html"><a href="workflow.html#stage-03---sead-imputation"><i class="fa fa-check"></i><b>1.5.4</b> Stage 03 - SEAD imputation</a></li>
+<li class="chapter" data-level="1.5.5" data-path="workflow.html"><a href="workflow.html#stage-04---allele-specific-quantification"><i class="fa fa-check"></i><b>1.5.5</b> Stage 04 - allele-specific quantification</a></li>
+<li class="chapter" data-level="1.5.6" data-path="workflow.html"><a href="workflow.html#stage-05---parental-origin-of-infant-haplotypes"><i class="fa fa-check"></i><b>1.5.6</b> Stage 05 - parental origin of infant haplotypes</a></li>
+<li class="chapter" data-level="1.5.7" data-path="workflow.html"><a href="workflow.html#stage-06---maternal-paternal-count-matrices"><i class="fa fa-check"></i><b>1.5.7</b> Stage 06 - maternal / paternal count matrices</a></li>
+<li class="chapter" data-level="1.5.8" data-path="workflow.html"><a href="workflow.html#stage-07---baseline-parent-of-origin-effects"><i class="fa fa-check"></i><b>1.5.8</b> Stage 07 - baseline parent-of-origin effects</a></li>
+<li class="chapter" data-level="1.5.9" data-path="workflow.html"><a href="workflow.html#stage-08---pfas-gdm-x-parent-of-origin-interaction"><i class="fa fa-check"></i><b>1.5.9</b> Stage 08 - PFAS / GDM x parent-of-origin interaction</a></li>
+<li class="chapter" data-level="1.5.10" data-path="workflow.html"><a href="workflow.html#stage-09---power"><i class="fa fa-check"></i><b>1.5.10</b> Stage 09 - power</a></li>
+<li class="chapter" data-level="1.5.11" data-path="workflow.html"><a href="workflow.html#stage-10---mediation-simulation-independent"><i class="fa fa-check"></i><b>1.5.11</b> Stage 10 - mediation simulation (independent)</a></li>
+</ul></li>
+<li class="chapter" data-level="1.6" data-path="workflow.html"><a href="workflow.html#shared-r-library"><i class="fa fa-check"></i><b>1.6</b> 6. Shared R library</a></li>
+<li class="chapter" data-level="1.7" data-path="workflow.html"><a href="workflow.html#outputs"><i class="fa fa-check"></i><b>1.7</b> 7. Outputs</a></li>
+<li class="chapter" data-level="1.8" data-path="workflow.html"><a href="workflow.html#resources-and-tuning"><i class="fa fa-check"></i><b>1.8</b> 8. Resources and tuning</a></li>
+<li class="chapter" data-level="1.9" data-path="workflow.html"><a href="workflow.html#design-notes-and-caveats"><i class="fa fa-check"></i><b>1.9</b> 9. Design notes and caveats</a></li>
+<li class="chapter" data-level="1.10" data-path="workflow.html"><a href="workflow.html#repository-layout"><i class="fa fa-check"></i><b>1.10</b> 10. Repository layout</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="genotyping-methods.html"><a href="genotyping-methods.html"><i class="fa fa-check"></i><b>2</b> Genotyping methods</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="genotyping-methods.html"><a href="genotyping-methods.html#dna-and-arrays"><i class="fa fa-check"></i><b>2.1</b> DNA and arrays</a></li>
+<li class="chapter" data-level="2.2" data-path="genotyping-methods.html"><a href="genotyping-methods.html#array-level-qc-before-this-pipeline"><i class="fa fa-check"></i><b>2.2</b> Array-level QC (before this pipeline)</a></li>
+<li class="chapter" data-level="2.3" data-path="genotyping-methods.html"><a href="genotyping-methods.html#processing-in-this-pipeline"><i class="fa fa-check"></i><b>2.3</b> Processing in this pipeline</a></li>
+<li class="chapter" data-level="2.4" data-path="genotyping-methods.html"><a href="genotyping-methods.html#references"><i class="fa fa-check"></i><b>2.4</b> References</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="reports.html"><a href="reports.html"><i class="fa fa-check"></i><b>3</b> Reports</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="reports.html"><a href="reports.html#methods-placenta-poe-and-pfas-interaction"><i class="fa fa-check"></i><b>3.1</b> Methods: placenta POE and PFAS interaction</a></li>
+<li class="chapter" data-level="3.2" data-path="reports.html"><a href="reports.html#pfas-x-poe-summary-plots"><i class="fa fa-check"></i><b>3.2</b> PFAS x POE summary plots</a></li>
+<li class="chapter" data-level="3.3" data-path="reports.html"><a href="reports.html#mediation-analysis-simulation"><i class="fa fa-check"></i><b>3.3</b> Mediation analysis simulation</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="config-files.html"><a href="config-files.html"><i class="fa fa-check"></i><b>4</b> Configuration</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="config-files.html"><a href="config-files.html#configpaths.sh"><i class="fa fa-check"></i><b>4.1</b> config/paths.sh</a></li>
+<li class="chapter" data-level="4.2" data-path="config-files.html"><a href="config-files.html#configresources.sh"><i class="fa fa-check"></i><b>4.2</b> config/resources.sh</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Parent-of-origin effects and PFAS exposure in human placenta</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="workflow" class="section level1 hasAnchor" number="1">
+<h1><span class="header-section-number">1</span> Workflow<a href="workflow.html#workflow" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>This document explains how the scripts in this repository fit together, what
+each stage does, what it needs, what it writes, and how to run the whole
+analysis from raw genotypes and RNA-seq on an LSF cluster.</p>
+<div id="study-design-in-one-paragraph" class="section level2 hasAnchor" number="1.1">
+<h2><span class="header-section-number">1.1</span> 1. Study design in one paragraph<a href="workflow.html#study-design-in-one-paragraph" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>GUSTO mother-father-infant trios are genotyped on the Illumina
+OmniExpressExome-8 v1.2 array. Trios are lifted to GRCh38, assigned to
+Chinese / Indian / Malay ancestry, phased with the pedigree (SHAPEIT5), and
+the phased infants are imputed on the SEAD reference panel. The imputed
+infant variants are projected onto a long-read placenta transcriptome
+(ESPRESSO + SQANTI3), and each infant’s placental short-read RNA-seq is
+quantified allele-specifically against a personalised transcriptome
+(Ornaments). The parents’ genotypes then tell which infant haplotype is
+maternal and which is paternal, turning haplotype-specific counts into
+maternal / paternal counts per transcript-SNP and gene-SNP. Negative-binomial
+mixed models estimate the cohort-level parent-of-origin effect (POE) for each
+gene and transcript (stage 07) and how that effect changes with maternal or
+cord-blood PFAS concentrations and gestational diabetes (stage 08).</p>
+</div>
+<div id="pipeline-at-a-glance" class="section level2 hasAnchor" number="1.2">
+<h2><span class="header-section-number">1.2</span> 2. Pipeline at a glance<a href="workflow.html#pipeline-at-a-glance" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<pre class="mermaid">
+flowchart TD
+  subgraph S00[00 reference]
+    ref[00_reference_index]
+    imp[00_imprint_db]
+  end
+  subgraph S01[01 genotype prep]
+    ped[01_pedigree] ; p2v[01_plink2vcf] --&gt; lift[01_liftover]
+    lift --&gt; mend[01_check_mendel]
+  end
+  subgraph S02[02 ancestry + phasing]
+    anc[02_infer_ancestry] --&gt; split[02_split] --&gt; phase[02_phase] --&gt; sub[02_subset]
+  end
+  sead{{"SEAD imputation server (manual: upload, impute, retrieve_SEAD.sh)"}}
+  subgraph S03[03 imputation]
+    filt[03_filter] --&gt; merge[03_merge]
+  end
+  subgraph S04[04 ASE quantification]
+    prep[04_prep_tx] --&gt; g2t[04_g2t] --&gt; g2tm[04_g2t_merge] --&gt; orn[04_ornaments]
+  end
+  poe[05_assign_poe]
+  summ[06_summarize]
+  subgraph S07[07 baseline POE]
+    inp[07_inputs] --&gt; fit7[07_fit] --&gt; comb7[07_combine] --&gt; rep7[07_report]
+    inp --&gt; ws[07_within_sample]
+  end
+  subgraph S08[08 PFAS x POE]
+    fit8[08_fit] --&gt; comb8[08_combine] --&gt; rep8[08_report]
+  end
+  pow[09_power]
+  ref --&gt; p2v ; lift --&gt; anc ; ped --&gt; anc ; ped --&gt; mend ; ped --&gt; phase
+  sub --&gt; sead --&gt; filt
+  merge --&gt; g2t ; anc --&gt; prep
+  merge --&gt; poe ; lift --&gt; poe ; ped --&gt; poe
+  orn --&gt; summ ; poe --&gt; summ ; prep --&gt; summ
+  summ --&gt; inp ; inp --&gt; fit8
+  imp --&gt; ws ; imp --&gt; rep7 ; imp --&gt; rep8
+  comb7 --&gt; pow
+</pre>
+<p>Stage 10 (mediation simulation) is independent of the data and runs on its own
+(<code>./run_pipeline.sh sim</code>).</p>
+<div id="step-registry" class="section level3 hasAnchor" number="1.2.1">
+<h3><span class="header-section-number">1.2.1</span> Step registry<a href="workflow.html#step-registry" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Every step is one LSF job or one LSF job array. <code>./run_pipeline.sh list</code>
+prints this table from the registry in <code>run_pipeline.sh</code>.</p>
+<table>
+<colgroup>
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Script</th>
+<th>Array (one element per)</th>
+<th>Depends on</th>
+<th>Group</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>00_reference_index</td>
+<td>00_reference/reference_index.lsf</td>
+<td>-</td>
+<td>-</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>00_imprint_db</td>
+<td>00_reference/imprint_db.lsf</td>
+<td>-</td>
+<td>-</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>01_pedigree</td>
+<td>01_genotype_prep/pedigree.lsf</td>
+<td>-</td>
+<td>-</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>01_plink2vcf</td>
+<td>01_genotype_prep/plink2vcf.lsf</td>
+<td>-</td>
+<td>00_reference_index</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>01_liftover</td>
+<td>01_genotype_prep/liftover.lsf</td>
+<td>-</td>
+<td>01_plink2vcf</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>01_check_mendel</td>
+<td>01_genotype_prep/check_mendel.lsf</td>
+<td>-</td>
+<td>01_liftover, 01_pedigree</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>01_manifest_qc</td>
+<td>01_genotype_prep/qc/manifest_qc.lsf</td>
+<td>-</td>
+<td>00_reference_index</td>
+<td>qc</td>
+</tr>
+<tr class="even">
+<td>02_infer_ancestry</td>
+<td>02_ancestry_phasing/infer_ancestry.lsf</td>
+<td>-</td>
+<td>01_liftover, 01_pedigree</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>02_split</td>
+<td>02_ancestry_phasing/split_by_ancestry.lsf</td>
+<td>ancestry group</td>
+<td>02_infer_ancestry</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>02_phase</td>
+<td>02_ancestry_phasing/phase.lsf</td>
+<td>group x autosome</td>
+<td>02_split, 01_pedigree</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>02_subset</td>
+<td>02_ancestry_phasing/subset_by_role.lsf</td>
+<td>ancestry group</td>
+<td>02_phase</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td><em>(manual)</em></td>
+<td>03_imputation_SEAD/retrieve_SEAD.sh</td>
+<td>-</td>
+<td>SEAD server</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>03_filter</td>
+<td>03_imputation_SEAD/filter_sead.lsf</td>
+<td>group x autosome</td>
+<td>SEAD files present</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>03_merge</td>
+<td>03_imputation_SEAD/merge_sead.lsf</td>
+<td>autosome</td>
+<td>03_filter</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>03_qc</td>
+<td>03_imputation_SEAD/imputation_qc.lsf</td>
+<td>-</td>
+<td>03_merge</td>
+<td>qc</td>
+</tr>
+<tr class="even">
+<td>04_prep_tx</td>
+<td>04_ornaments_ase/prep_transcriptome.lsf</td>
+<td>-</td>
+<td>02_infer_ancestry</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>04_g2t</td>
+<td>04_ornaments_ase/g2t_vcf.lsf</td>
+<td>autosome</td>
+<td>03_merge, 04_prep_tx</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>04_g2t_merge</td>
+<td>04_ornaments_ase/g2t_merge.lsf</td>
+<td>-</td>
+<td>04_g2t</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>04_ornaments</td>
+<td>04_ornaments_ase/ornaments.lsf</td>
+<td>RNA-seq infant</td>
+<td>04_g2t_merge</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>04_txomic_stats</td>
+<td>04_ornaments_ase/txomic_stats.lsf</td>
+<td>-</td>
+<td>04_g2t_merge</td>
+<td>qc</td>
+</tr>
+<tr class="odd">
+<td>05_assign_poe</td>
+<td>05_parental_origin/assign_poe.lsf</td>
+<td>-</td>
+<td>03_merge, 01_liftover, 01_pedigree</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>06_summarize</td>
+<td>06_feature_matrices/summarize.lsf</td>
+<td>level (gene, transcript)</td>
+<td>04_ornaments, 05_assign_poe, 04_prep_tx</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>07_inputs</td>
+<td>07_poe_baseline/model_inputs.lsf</td>
+<td>-</td>
+<td>06_summarize</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>07_within_sample</td>
+<td>07_poe_baseline/within_sample.lsf</td>
+<td>-</td>
+<td>07_inputs, 00_imprint_db</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>07_fit</td>
+<td>07_poe_baseline/fit_baseline.lsf</td>
+<td>feature batch</td>
+<td>07_inputs</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>07_combine</td>
+<td>07_poe_baseline/combine_baseline.lsf</td>
+<td>-</td>
+<td>07_fit</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>07_report</td>
+<td>07_poe_baseline/baseline_report.lsf</td>
+<td>-</td>
+<td>07_combine, 00_imprint_db</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>08_fit</td>
+<td>08_pfas_interaction/fit_interaction.lsf</td>
+<td>feature batch</td>
+<td>07_inputs</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>08_combine</td>
+<td>08_pfas_interaction/combine_interaction.lsf</td>
+<td>-</td>
+<td>08_fit</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>08_report</td>
+<td>08_pfas_interaction/interaction_report.lsf</td>
+<td>-</td>
+<td>08_combine, 00_imprint_db</td>
+<td>all</td>
+</tr>
+<tr class="odd">
+<td>09_power</td>
+<td>09_power/power.lsf</td>
+<td>-</td>
+<td>07_combine</td>
+<td>all</td>
+</tr>
+<tr class="even">
+<td>10_sim</td>
+<td>10_mediation_sim/sim.lsf</td>
+<td>simulated study</td>
+<td>-</td>
+<td>sim</td>
+</tr>
+<tr class="odd">
+<td>10_aggregate</td>
+<td>10_mediation_sim/aggregate.lsf</td>
+<td>-</td>
+<td>10_sim</td>
+<td>sim</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="before-the-first-run" class="section level2 hasAnchor" number="1.3">
+<h2><span class="header-section-number">1.3</span> 3. Before the first run<a href="workflow.html#before-the-first-run" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="software" class="section level3 hasAnchor" number="1.3.1">
+<h3><span class="header-section-number">1.3.1</span> 3.1 Software<a href="workflow.html#software" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>Used in</th>
+<th>Configured by</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>LSF (<code>bsub</code>, <code>bjobs</code>)</td>
+<td>job submission</td>
+<td><code>config/resources.sh</code> (queues)</td>
+</tr>
+<tr class="even">
+<td>bcftools &gt;= 1.16, tabix, bgzip</td>
+<td>01-05</td>
+<td><code>BCFTOOLS_ENV</code> (conda env)</td>
+</tr>
+<tr class="odd">
+<td>bcftools build with the <code>+liftover</code> plugin</td>
+<td>01_liftover</td>
+<td><code>LIFTOVER_BCFTOOLS</code></td>
+</tr>
+<tr class="even">
+<td>PLINK 1.9</td>
+<td>01</td>
+<td><code>PLINK_MODULE</code></td>
+</tr>
+<tr class="odd">
+<td>samtools</td>
+<td>00</td>
+<td><code>SAMTOOLS_ENV</code></td>
+</tr>
+<tr class="even">
+<td>SHAPEIT5 (<code>SHAPEIT5_phase_common</code>)</td>
+<td>02_phase</td>
+<td><code>SHAPEIT5_VENV</code></td>
+</tr>
+<tr class="odd">
+<td>Ornaments (<code>ornaments</code>, g2t conversion)</td>
+<td>04</td>
+<td><code>ORNAMENTS_VENV</code></td>
+</tr>
+<tr class="even">
+<td>Python &gt;= 3.8 with pysam</td>
+<td>01 QC, 05</td>
+<td><code>PYTHON_ENV</code></td>
+</tr>
+<tr class="odd">
+<td>R &gt;= 4.3 (run via Singularity image)</td>
+<td>00, 02-04, 06-10</td>
+<td><code>RSTUDIO_SIF</code>, <code>R_LIB_DIR</code>, <code>SING_BIND</code></td>
+</tr>
+<tr class="even">
+<td>wget</td>
+<td>manual SEAD download</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>R packages: glmmTMB, data.table, dplyr, tidyr, purrr, forcats, stringr,
+tibble, ggplot2, ggrepel, scales, patchwork, BiocParallel, optparse, readxl,
+SNPRelate, class, boot, lavaan, dagitty, biomaRt (Bioconductor).</p>
+</div>
+<div id="configuration" class="section level3 hasAnchor" number="1.3.2">
+<h3><span class="header-section-number">1.3.2</span> 3.2 Configuration<a href="workflow.html#configuration" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>All paths and environment names live in <code>config/paths.sh</code>; all LSF resources
+in <code>config/resources.sh</code>. Every value is a default that can be overridden by
+exporting the variable before calling <code>run_pipeline.sh</code>. R scripts read the
+same variables through <code>R/setup.R</code>, so there is one place to edit.</p>
+<p>Typical first edit: set <code>LAB_DIR</code>, <code>SCRATCH_DIR</code>, the software environment
+names, and the paths in the <em>GUSTO inputs</em> and <em>references</em> blocks.</p>
+</div>
+<div id="required-inputs" class="section level3 hasAnchor" number="1.3.3">
+<h3><span class="header-section-number">1.3.3</span> 3.3 Required inputs<a href="workflow.html#required-inputs" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>TRIOS_DIR/&lt;PLINK_PREFIXES&gt;.{bed,bim,fam}</code></td>
+<td>PLINK binaries for infants, mothers, fathers (hg19, TOP-strand alleles)</td>
+</tr>
+<tr class="even">
+<td><code>HG19_FASTA</code>, <code>HG38_FASTA</code>, <code>HG19_TO_HG38_CHAIN</code></td>
+<td>reference genomes (hg19 chr-prefixed) and liftover chain</td>
+</tr>
+<tr class="odd">
+<td><code>GENETIC_MAP_DIR/chr&lt;N&gt;.b38.gmap.gz</code></td>
+<td>GRCh38 genetic maps (SHAPEIT format)</td>
+</tr>
+<tr class="even">
+<td><code>INFANT_META_CSV</code></td>
+<td>infants with placental RNA-seq: SubjectID, maternal ethnicity</td>
+</tr>
+<tr class="odd">
+<td><code>FASTQ_DIR/J&lt;fastq id&gt;_{1,2}.fq.gz</code>, <code>FASTQ_ID_MAP</code></td>
+<td>paired-end placental RNA-seq; map <code>&lt;SubjectID&gt; &lt;fastq id&gt;</code></td>
+</tr>
+<tr class="even">
+<td><code>TX_FASTA</code>, <code>TX_GTF</code>, <code>TX_CLASSIF</code></td>
+<td>long-read placenta transcriptome (ESPRESSO sequences, GTF, SQANTI3 classification)</td>
+</tr>
+<tr class="odd">
+<td><code>RNASEQ_COVARS_CSV</code></td>
+<td>RNA-seq covariates: SubjectID, sex, mother_ethnicity, GA, gdm</td>
+</tr>
+<tr class="even">
+<td><code>PFAS_MAT_CSV</code>, <code>PFAS_CHILD_CSV</code></td>
+<td>SubjectID + 8 PFAS (PFBA PFOA PFNA PFDA PFUnDA PFBS PFHxS PFOS) with <code>_mat</code> / <code>_child</code> suffixes, first 9 columns</td>
+</tr>
+<tr class="odd">
+<td><code>PFAS_MAT_COHORT_XLSX</code>, <code>PFAS_CORD_COHORT_XLSX</code></td>
+<td>whole-cohort PFAS tables (dose-response annotation only)</td>
+</tr>
+<tr class="even">
+<td><code>ARRAY_MANIFEST</code>, <code>DBSNP_*_VCF</code></td>
+<td>only for the optional manifest QC</td>
+</tr>
+<tr class="odd">
+<td><code>EXCLUDE_SAMPLES_FILE</code></td>
+<td>optional; one sample ID per line, removed from every model</td>
+</tr>
+</tbody>
+</table>
+<p>Sample naming: PLINK writes VCF sample IDs as <code>FID_IID</code>. IIDs start with <code>B</code>
+(infant), <code>M</code> (mother) or <code>P</code> (father); the infant’s FID is the GUSTO
+SubjectID. Model sample IDs are <code>&lt;SubjectID&gt;_B&lt;SubjectID&gt;</code> with <code>-</code> replaced by
+<code>_</code>.</p>
+<p><strong>PFAS scale.</strong> PFAS values enter the interaction models exactly as they appear
+in <code>PFAS_*_CSV</code> (no log transform, no standardisation inside the pipeline).
+Decide the scale before the first run (for example log2 ng/mL) and write the
+CSVs accordingly; <code>beta_int</code> is per unit of whatever scale is supplied.</p>
+</div>
+</div>
+<div id="running-the-pipeline" class="section level2 hasAnchor" number="1.4">
+<h2><span class="header-section-number">1.4</span> 4. Running the pipeline<a href="workflow.html#running-the-pipeline" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="workflow.html#cb1-1" tabindex="-1"></a><span class="bu">cd</span> placenta-poe-pfas</span>
+<span id="cb1-2"><a href="workflow.html#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="workflow.html#cb1-3" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> all              <span class="co"># dry run: prints the bsub plan, submits nothing</span></span>
+<span id="cb1-4"><a href="workflow.html#cb1-4" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> <span class="at">--submit</span> all     <span class="co"># queue every main step with LSF dependencies</span></span>
+<span id="cb1-5"><a href="workflow.html#cb1-5" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> status           <span class="co"># receipts done / expected and active jobs per step</span></span>
+<span id="cb1-6"><a href="workflow.html#cb1-6" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> list             <span class="co"># the step registry</span></span></code></pre></div>
+<p>Targets can be a step (<code>02_phase</code>), a stage number (<code>07</code>), <code>all</code>, <code>qc</code>
+(optional QC steps) or <code>sim</code> (stage 10). Several targets can be combined.</p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--submit</code></td>
+<td>actually submit (default is a dry run)</td>
+</tr>
+<tr class="even">
+<td><code>--force</code></td>
+<td>ignore receipts and rerun every selected element</td>
+</tr>
+<tr class="odd">
+<td><code>--pilot N</code></td>
+<td>submit at most N elements of each selected array step</td>
+</tr>
+<tr class="even">
+<td><code>--lenient</code></td>
+<td>start downstream steps when upstream jobs end (<code>ended()</code>) rather than only after every element succeeded (<code>done()</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>--tag NAME</code></td>
+<td>job-name prefix (default <code>poe</code>) so two copies can run side by side</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Resume.</strong> Each finished job or array element writes
+<code>RUN_DIR/receipts/&lt;step&gt;.&lt;index&gt;.ok</code>. Steps with all receipts are skipped and
+array steps resubmit only missing elements, so rerunning the same command
+resumes after failures. Delete a receipt (or use <code>--force</code>) to redo work.</p>
+<div id="the-sead-imputation-step-manual" class="section level3 hasAnchor" number="1.4.1">
+<h3><span class="header-section-number">1.4.1</span> 4.1 The SEAD imputation step (manual)<a href="workflow.html#the-sead-imputation-step-manual" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The SEAD server is external, so the pipeline pauses there:</p>
+<ol style="list-style-type: decimal">
+<li><code>./run_pipeline.sh --submit all</code> runs stages 00-02 and writes the phased
+infant VCFs to <code>SEAD_UPLOAD_DIR/&lt;group&gt;/&lt;group&gt;_chr&lt;N&gt;.vcf.gz</code>. Steps that
+need imputed data are not submitted while the SEAD results are missing.</li>
+<li>Upload each ancestry group to the SEAD server (GRCh38, Rsq &gt;= 0.3 filter).</li>
+<li>Save the download links of each finished job to
+<code>config/sead_urls_&lt;group&gt;.txt</code> (gitignored; the links contain access tokens) and run on
+a login/transfer node:
+<code>REPO=$PWD bash 03_imputation_SEAD/retrieve_SEAD.sh &lt;group&gt; config/sead_urls_&lt;group&gt;.txt</code></li>
+<li>Once every <code>SEAD_DOWNLOAD_DIR/&lt;group&gt;_SEAD/chr&lt;N&gt;.SEAD.GRCh38.dose.vcf.gz</code>
+exists, run <code>./run_pipeline.sh --submit all</code> again; finished steps are skipped
+and the pipeline continues from stage 03.</li>
+</ol>
+</div>
+<div id="other-manual-points" class="section level3 hasAnchor" number="1.4.2">
+<h3><span class="header-section-number">1.4.2</span> 4.2 Other manual points<a href="workflow.html#other-manual-points" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<ul>
+<li><code>00_imprint_db</code> queries Ensembl through biomaRt and needs internet access.
+If compute nodes are offline, run <code>REPO=$PWD Rscript 00_reference/imprintDB.R</code>
+on a login node, then <code>touch $RUN_DIR/receipts/00_imprint_db.1.ok</code>.</li>
+<li>Ornaments is the most expensive step. Run a pilot first (section 8).</li>
+</ul>
+</div>
+<div id="a-full-run-from-raw-data" class="section level3 hasAnchor" number="1.4.3">
+<h3><span class="header-section-number">1.4.3</span> 4.3 A full run from raw data<a href="workflow.html#a-full-run-from-raw-data" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="workflow.html#cb2-1" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> <span class="at">--submit</span> all qc          <span class="co"># stages 00-02 (+ manifest QC)</span></span>
+<span id="cb2-2"><a href="workflow.html#cb2-2" tabindex="-1"></a><span class="co">#   ... SEAD upload, imputation, retrieve_SEAD.sh for each group ...</span></span>
+<span id="cb2-3"><a href="workflow.html#cb2-3" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> <span class="at">--submit</span> 04_ornaments <span class="at">--pilot</span> 2   <span class="co"># optional resource pilot</span></span>
+<span id="cb2-4"><a href="workflow.html#cb2-4" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> <span class="at">--submit</span> all qc          <span class="co"># stages 03-09</span></span>
+<span id="cb2-5"><a href="workflow.html#cb2-5" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> <span class="at">--submit</span> sim             <span class="co"># stage 10, independent</span></span>
+<span id="cb2-6"><a href="workflow.html#cb2-6" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> status</span></code></pre></div>
+<p>Logs go to <code>LOG_DIR/&lt;step&gt;.&lt;jobid&gt;.&lt;index&gt;.{out,err}</code>.</p>
+</div>
+</div>
+<div id="stage-by-stage-methods" class="section level2 hasAnchor" number="1.5">
+<h2><span class="header-section-number">1.5</span> 5. Stage-by-stage methods<a href="workflow.html#stage-by-stage-methods" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="stage-00---references" class="section level3 hasAnchor" number="1.5.1">
+<h3><span class="header-section-number">1.5.1</span> Stage 00 - references<a href="workflow.html#stage-00---references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<ul>
+<li><strong>reference_index</strong> indexes the hg19 and GRCh38 FASTA files.</li>
+<li><strong>imprintDB.R</strong> maps a curated list of imprinted-gene symbols and aliases to
+Ensembl gene IDs (<code>IMPRINT_DB</code>) and builds an Ensembl ID to symbol table for
+every gene in the placenta transcriptome (<code>PLACENTA_DB</code>).</li>
+</ul>
+</div>
+<div id="stage-01---genotype-preparation" class="section level3 hasAnchor" number="1.5.2">
+<h3><span class="header-section-number">1.5.2</span> Stage 01 - genotype preparation<a href="workflow.html#stage-01---genotype-preparation" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<ul>
+<li><strong>prep_ped.R / pedigree.lsf</strong>: infant-centred trio pedigree from the three
+<code>.fam</code> files (<code>TRIO_PED</code>: FID IID PID MID SEX PHENO, <code>0</code> = parent not
+genotyped), then <code>make_shapeit5_fam.sh</code> writes the SHAPEIT5 pedigree
+(<code>offspring father mother</code>, <code>NA</code> for a missing parent) using VCF IDs
+(<code>FID_IID</code>; set <code>ID_MODE=iid</code> if the VCF uses bare IIDs).</li>
+<li><strong>plink2vcf.lsf</strong>: PLINK 1.9 merge of the three files (SNPs with conflicting
+alleles across files are dropped), autosomes only, chr-prefixed VCF;
+<code>bcftools +fixref -m top</code> converts Illumina TOP strand to the hg19 forward
+strand; <code>bcftools norm --check-ref x</code> drops remaining mismatches.</li>
+<li><strong>liftover.lsf</strong>: drop sites invariant across all trio members, lift hg19 to
+GRCh38 with <code>bcftools +liftover</code>, sort, split/deduplicate, keep biallelic SNPs
+whose REF matches GRCh38 (<code>TRIO_VCF_HG38</code>).</li>
+<li><strong>check_mendel.lsf</strong>: PLINK <code>--mendel</code> error rates per trio, individual and
+SNP (QC report, not a filter).</li>
+<li><strong>qc/manifest_qc.lsf</strong> (optional): aligns the array manifest to hg19 and
+records which SNPs needed a swap or strand flip.</li>
+</ul>
+<p>Genotyping and array-level QC are described in <code>reports/genotype_methods.md</code>.</p>
+</div>
+<div id="stage-02---ancestry-and-phasing" class="section level3 hasAnchor" number="1.5.3">
+<h3><span class="header-section-number">1.5.3</span> Stage 02 - ancestry and phasing<a href="workflow.html#stage-02---ancestry-and-phasing" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<ul>
+<li><strong>infer_ancestry.R</strong>: PCA (SNPRelate) on LD-pruned autosomal SNPs in infants.
+Infants with reported maternal ethnicity (the RNA-seq subset) train a 3-nearest
+neighbour classifier on PC1/PC2 that labels the remaining infants; parents
+inherit their infant’s label. Writes <code>samples_&lt;group&gt;.txt</code> per group.</li>
+<li><strong>split_by_ancestry.lsf</strong>: per group, recompute site statistics and keep
+biallelic SNPs with missingness &lt;= 0.05, MAF &gt;= 0.05, HWE p &gt;= 1e-6; one BCF
+per autosome.</li>
+<li><strong>phase.lsf</strong>: SHAPEIT5 <code>phase_common</code> with the trio pedigree and GRCh38
+genetic map, per group and chromosome.</li>
+<li><strong>subset_by_role.lsf</strong>: phased infants to bgzipped VCFs for SEAD upload;
+unphased mothers and fathers kept per chromosome.</li>
+</ul>
+</div>
+<div id="stage-03---sead-imputation" class="section level3 hasAnchor" number="1.5.4">
+<h3><span class="header-section-number">1.5.4</span> Stage 03 - SEAD imputation<a href="workflow.html#stage-03---sead-imputation" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<ul>
+<li><strong>retrieve_SEAD.sh</strong> (manual, see 4.1).</li>
+<li><strong>filter_sead.lsf</strong>: keep biallelic imputed sites with MAF &gt; 0.01 (the server
+has applied Rsq &gt;= 0.3).</li>
+<li><strong>merge_sead.lsf</strong>: merge the three ancestry groups per chromosome (union of
+sites; genotypes absent from a group are missing) into <code>IMPUTED_DIR</code>.</li>
+<li><strong>imputation_qc</strong> (optional): site counts before and after filtering, variant
+density per kb, imputed MAF and R2 distributions.</li>
+</ul>
+</div>
+<div id="stage-04---allele-specific-quantification" class="section level3 hasAnchor" number="1.5.5">
+<h3><span class="header-section-number">1.5.5</span> Stage 04 - allele-specific quantification<a href="workflow.html#stage-04---allele-specific-quantification" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<ul>
+<li><strong>prep_transcriptome.lsf</strong>: list the VCF IDs of infants with RNA-seq
+(<code>INFANT_SAMPLES</code>) and add 5’-&gt;3’ <code>exon_number</code> attributes to the transcriptome
+GTF (required by Ornaments).</li>
+<li><strong>g2t_vcf.lsf</strong>: project imputed genomic variants onto transcript coordinates
+(Ornaments), keeping heterozygous sites.</li>
+<li><strong>g2t_merge.lsf</strong>: merge chromosomes for the RNA-seq infants, write a valid
+header (one contig per transcript), bgzip and index.</li>
+<li><strong>ornaments.lsf</strong>: per infant, extract its phased heterozygous transcriptomic
+variants, build a personalised transcriptome and index, and run
+<code>ornaments quant</code> on the paired-end placental RNA-seq. Index files are removed
+after quantification unless <code>KEEP_TXOME_INDEX=1</code>.</li>
+<li><strong>txomic_stats</strong> (optional): heterozygous variants per transcript.</li>
+</ul>
+</div>
+<div id="stage-05---parental-origin-of-infant-haplotypes" class="section level3 hasAnchor" number="1.5.6">
+<h3><span class="header-section-number">1.5.6</span> Stage 05 - parental origin of infant haplotypes<a href="workflow.html#stage-05---parental-origin-of-infant-haplotypes" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p><code>assign_POE.py</code>, per chromosome and infant:</p>
+<ol style="list-style-type: decimal">
+<li>parental panel = biallelic SNPs genotyped in nearly all parents;</li>
+<li>informative sites = panel sites where the mother and father are homozygous
+for different alleles (REF/ALT must agree between the trio VCF and the
+imputed infant VCF);</li>
+<li>at each informative site where the infant is a phased heterozygote, the left
+haplotype votes maternal if it carries the mother’s allele, otherwise
+paternal. Majority wins; ties are <code>undefined</code>.</li>
+</ol>
+<p>Output <code>HAP_ORIGIN</code> has one row per chromosome and columns <code>&lt;ID&gt;_L</code>, <code>&lt;ID&gt;_R</code>;
+<code>HAP_ORIGIN.votes.tsv</code> records the vote counts.</p>
+</div>
+<div id="stage-06---maternal-paternal-count-matrices" class="section level3 hasAnchor" number="1.5.7">
+<h3><span class="header-section-number">1.5.7</span> Stage 06 - maternal / paternal count matrices<a href="workflow.html#stage-06---maternal-paternal-count-matrices" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p><code>ornaments_summarizeToGene.R --level gene|transcript</code>, per sample:</p>
+<ol style="list-style-type: decimal">
+<li>within-gene transcript usage weights <code>w_t = TPM_t / sum TPM</code> (equal weights if
+all transcripts of a gene have TPM 0);</li>
+<li>Ornaments haplotype counts (L, R) to maternal / paternal using <code>HAP_ORIGIN</code>
+for that chromosome (undefined haplotypes contribute 0);</li>
+<li>transcript level: feature = <code>transcript:tx_pos</code>;
+gene level: transcript positions are mapped back to genomic SNPs and
+feature = <code>gene:chr:pos</code>, count = sum over the gene’s transcripts carrying
+that SNP of <code>w_t x count_t</code>.</li>
+</ol>
+<p>Columns are <code>&lt;sample&gt;_maternal</code>, <code>&lt;sample&gt;_paternal</code>; absent features are 0.</p>
+</div>
+<div id="stage-07---baseline-parent-of-origin-effects" class="section level3 hasAnchor" number="1.5.8">
+<h3><span class="header-section-number">1.5.8</span> Stage 07 - baseline parent-of-origin effects<a href="workflow.html#stage-07---baseline-parent-of-origin-effects" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<ul>
+<li><p><strong>model_inputs.R</strong>: joins covariates and PFAS tables; modelled samples are
+those present in the counts and metadata, not excluded, with non-missing sex
+and ancestry. Codes each condition in <code>POE_CONDITIONS</code> (continuous or binary),
+computes median-of-ratios size factors over maternal + paternal counts,
+filters features (&gt;= 3 SNPs, &gt;= 15 samples, &gt;= 50 total counts), and splits
+features into <code>N_BATCHES_GENE</code> + <code>N_BATCHES_TX</code> balanced batches of long
+tables.</p></li>
+<li><p><strong>fit_baseline.R</strong> (array): per feature, glmmTMB negative binomial (nbinom2)</p>
+<p><code>count ~ allele + sex + ancestry + (1|SNPpos) + (1|sample_id) + offset(log SF)</code></p>
+<p><code>beta</code> = log(paternal / maternal) expression ratio. Counts are rounded.</p></li>
+<li><p><strong>combine_baseline.R</strong>: gathers all batches (fails if any is missing) and
+applies Benjamini-Hochberg within each level.</p></li>
+<li><p><strong>baseline_report.R</strong>: significance tier = BH q &lt; 0.10 and the 95% CI of
+<code>beta</code> entirely outside +/- log(1.5) (60:40 allelic ratio). Volcano, forest,
+p-value, QQ and observed-vs-predicted calibration plots; transcript-gene
+overlap; Fisher test for enrichment of known imprinted genes among POE genes.</p></li>
+<li><p><strong>within_sample.R</strong>: per sample, exact binomial test of maternal vs paternal
+counts per SNP, ACAT-combined per feature (count weights), BH within sample.
+A feature is biased in a sample if q &lt; 0.05 and maternal ratio &lt; 0.1 or &gt; 0.9.</p></li>
+</ul>
+</div>
+<div id="stage-08---pfas-gdm-x-parent-of-origin-interaction" class="section level3 hasAnchor" number="1.5.9">
+<h3><span class="header-section-number">1.5.9</span> Stage 08 - PFAS / GDM x parent-of-origin interaction<a href="workflow.html#stage-08---pfas-gdm-x-parent-of-origin-interaction" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<ul>
+<li><p><strong>fit_interaction.R</strong> (array, same batches as stage 07): per feature and
+condition X (samples with missing X dropped),</p>
+<p><code>count ~ allele * X + ancestry + sex + (1|SNPpos) + (1|sample_id) + offset(log SF)</code></p>
+<p><code>beta_int</code> = change in the POE log-ratio per unit of X. For continuous X the
+POE is also reported at X = 0, at +1 SD, at the mean and mean + 1 SD of the
+modelled samples, and along a dose grid of -8..8 (delta-method 95% CIs).
+Binary X (GDM) reports the POE in each group. Each feature uses a seed derived
+from its ID, so results do not depend on batch layout.</p></li>
+<li><p><strong>combine_interaction.R</strong>: BH within each level x condition.</p></li>
+<li><p><strong>interaction_report.R</strong>: tiers via <code>classify_poe_nbmm_diff</code>; hits = q_int &lt; 0.10
+and |beta_int| &gt; log(1.5). Volcano, p-value, QQ and forest plots per condition,
+hit summaries for every condition, overlap with imprinted genes, gene-transcript
+overlap, bar charts of strict hits per PFAS (maternal and cord).</p></li>
+<li><p><strong>dose_response.R</strong>: for conditions in <code>DOSE_RESPONSE_CONDITIONS</code>, predicted
+maternal allelic ratio across the exposure range for each hit, cohort-centred
+(annotated with the whole-cohort mean / SD) and centred on the modelled samples.</p></li>
+</ul>
+</div>
+<div id="stage-09---power" class="section level3 hasAnchor" number="1.5.10">
+<h3><span class="header-section-number">1.5.10</span> Stage 09 - power<a href="workflow.html#stage-09---power" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<ul>
+<li><strong>power_analysis.R</strong>: power of the baseline POE test versus sample size,
+simulated from the observed baseline standard errors (scaled by sqrt(n0/N)),
+for a fraction pi1 in {0.5%, 1%, 2%} of features carrying a true effect of
+ratio 1.5-1.8, discoveries at BH q &lt; 0.10 and |beta| &gt;= log(1.5), 1000 studies
+per scenario. Runs for both levels.</li>
+<li><strong>power_plot.R</strong>: power to detect allelic imbalance and its change with
+exposure by allele-specific read depth, from the Bayesian ASE simulation summary
+shipped in <code>09_power/</code>.</li>
+</ul>
+</div>
+<div id="stage-10---mediation-simulation-independent" class="section level3 hasAnchor" number="1.5.11">
+<h3><span class="header-section-number">1.5.11</span> Stage 10 - mediation simulation (independent)<a href="workflow.html#stage-10---mediation-simulation-independent" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p><code>PFAS_imprinting_sim.R</code> simulates null studies (n = 100, 1000 isoforms) of the
+planned PFAS -&gt; imprinted isoform -&gt; outcome (SRS) mediation analysis and
+compares the type-I error of SEM (lavaan, bootstrap), CoCA, PGC and an adjusted
+linear model. Array element r uses seed r. <code>aggregate_PFAS_sim_results.R</code>
+summarises type-I error across runs; <code>DAG.R</code> draws the analysis DAG.</p>
+</div>
+</div>
+<div id="shared-r-library" class="section level2 hasAnchor" number="1.6">
+<h2><span class="header-section-number">1.6</span> 6. Shared R library<a href="workflow.html#shared-r-library" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>R drivers start with <code>source(file.path(Sys.getenv("REPO"), "R/setup.R"))</code>.</p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>R/setup.R</code></td>
+<td>imports <code>config/paths.sh</code> into R; <code>P()</code> path lookup, <code>words()</code>, <code>fig()</code>, <code>out()</code>, <code>NCPU</code>, <code>load_poe_library()</code></td>
+</tr>
+<tr class="even">
+<td><code>R/utils.R</code></td>
+<td>readers for count matrices, transcript-gene map, Ensembl tables; symbol conversion; sample exclusion</td>
+</tr>
+<tr class="odd">
+<td><code>R/poe_nbmm.R</code></td>
+<td>size factors, feature filters, long tables, baseline and interaction NB-GLMM fits, condition coding, batching, per-feature seeds</td>
+</tr>
+<tr class="even">
+<td><code>R/poe_within_sample.R</code></td>
+<td>binomial + ACAT within-sample tests</td>
+</tr>
+<tr class="odd">
+<td><code>R/poe_classify.R</code></td>
+<td>significance tiers (baseline and interaction)</td>
+</tr>
+<tr class="even">
+<td><code>R/poe_plots.R</code></td>
+<td>volcano, forest, p-value, bar plots</td>
+</tr>
+<tr class="odd">
+<td><code>R/poe_calibration.R</code></td>
+<td>QQ and observed-vs-predicted calibration plots</td>
+</tr>
+</tbody>
+</table>
+<p>Shell job scripts source <code>bin/job_env.sh</code>, which provides <code>log</code>, environment
+activation helpers, <code>rscript</code> (Rscript inside the Singularity image), array
+index helpers and <code>receipt</code>.</p>
+</div>
+<div id="outputs" class="section level2 hasAnchor" number="1.7">
+<h2><span class="header-section-number">1.7</span> 7. Outputs<a href="workflow.html#outputs" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Location</th>
+<th>Main files</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>TRIOS_DIR/merged/</code></td>
+<td><code>trios_hg19.vcf.gz</code>, <code>trios_hg38.vcf.gz</code>, Mendel QC</td>
+</tr>
+<tr class="even">
+<td><code>ANCESTRY_DIR/</code></td>
+<td><code>samples_&lt;group&gt;.txt</code>, <code>ancestry_assignments.tsv</code></td>
+</tr>
+<tr class="odd">
+<td><code>IMPUTED_DIR/</code></td>
+<td><code>chr&lt;N&gt;.biallelic.filtered.vcf.gz</code></td>
+</tr>
+<tr class="even">
+<td><code>QUANT_DIR/&lt;sample&gt;/</code></td>
+<td>Ornaments allele counts and TPMs</td>
+</tr>
+<tr class="odd">
+<td><code>HAP_ORIGIN</code></td>
+<td>parental origin of infant haplotypes</td>
+</tr>
+<tr class="even">
+<td><code>POE_GENE_COUNTS</code>, <code>POE_TX_COUNTS</code></td>
+<td>maternal / paternal count matrices</td>
+</tr>
+<tr class="odd">
+<td><code>MODEL_DIR/</code></td>
+<td><code>model_inputs.rds</code>, <code>model_metadata.rds</code>, <code>poe_nbmm_results_&lt;level&gt;.rds</code>, <code>poe_tiers_&lt;level&gt;.rds</code>, <code>poe_by_condition_&lt;level&gt;_&lt;cond&gt;.rds</code>, <code>poe_diff_tiers.rds</code>, <code>within_sample_tests.rds</code></td>
+</tr>
+<tr class="even">
+<td><code>WORK_DIR/</code></td>
+<td>TSV tables: model input summaries, baseline results and hits, imprinting enrichment, interaction results (<code>poe_interaction_all.tsv.gz</code>, <code>poe_interaction_hits.tsv</code>, <code>poe_interaction_hit_summary.tsv</code>), power tables, simulation type-I error</td>
+</tr>
+<tr class="odd">
+<td><code>FIG_DIR/</code></td>
+<td>PNG figures; <code>interaction/</code> and <code>dose_response/</code> subfolders</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="resources-and-tuning" class="section level2 hasAnchor" number="1.8">
+<h2><span class="header-section-number">1.8</span> 8. Resources and tuning<a href="workflow.html#resources-and-tuning" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p><code>config/resources.sh</code> sets wall time, cores and memory per step
+(<code>RES_&lt;step&gt;</code>) and array concurrency (<code>ARR_&lt;step&gt;</code>). Job scripts read the
+cores actually granted (<code>LSB_DJOB_NUMPROC</code>), so changing <code>-n</code> is the only edit
+needed to scale a step. To size Ornaments (or any array step):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="workflow.html#cb3-1" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> <span class="at">--submit</span> 04_ornaments <span class="at">--pilot</span> 2</span>
+<span id="cb3-2"><a href="workflow.html#cb3-2" tabindex="-1"></a><span class="ex">tools/lsf_usage_report.sh</span> 04_ornaments      <span class="co"># peak memory and run time per job</span></span>
+<span id="cb3-3"><a href="workflow.html#cb3-3" tabindex="-1"></a><span class="co"># edit RES_04_ornaments, then submit the rest:</span></span>
+<span id="cb3-4"><a href="workflow.html#cb3-4" tabindex="-1"></a><span class="ex">./run_pipeline.sh</span> <span class="at">--submit</span> 04_ornaments</span></code></pre></div>
+<p>Model batch counts (<code>N_BATCHES_GENE</code>, <code>N_BATCHES_TX</code>) control how many array
+elements stages 07-08 use; changing them requires rerunning <code>07_inputs</code>.</p>
+</div>
+<div id="design-notes-and-caveats" class="section level2 hasAnchor" number="1.9">
+<h2><span class="header-section-number">1.9</span> 9. Design notes and caveats<a href="workflow.html#design-notes-and-caveats" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<ul>
+<li><strong>PFAS scale</strong> is whatever the input CSVs contain (section 3.3). The dose grid
+of the cohort-centred dose-response plot is in those units; the subset-centred
+plot is in SDs of the modelled samples.</li>
+<li><strong>Effect-size threshold.</strong> Baseline and interaction hits use log(1.5)
+(a 60:40 allelic ratio). Stricter thresholds such as log(2.33) (70:30) or
+log(2.5) can be applied to the saved results with <code>classify_poe_nbmm()</code>.</li>
+<li><strong>Covariates.</strong> Models adjust for sex and ancestry. Gestational age is read
+into the metadata but is not in the model formulas.</li>
+<li><strong>Size factors</strong> are computed once on all modelled samples and reused for
+every condition.</li>
+<li><strong>Haplotype origin</strong> is assigned per chromosome. Infants homozygous at an
+informative site and sites whose alleles differ between the trio and imputed
+VCFs do not vote; haplotypes with tied votes are <code>undefined</code> and contribute
+no counts.</li>
+<li><strong>Ancestry</strong> for infants without reported ethnicity comes from a 3-NN
+classifier on two PCs; check <code>ancestry_assignments.tsv</code> and the PCA figure.</li>
+<li><strong>Phasing</strong> uses SHAPEIT5 <code>phase_common</code> with the trio pedigree. Check that the
+pedigree IDs match the VCF sample IDs (<code>ID_MODE</code>, section 5, stage 01).</li>
+<li><strong>Within-sample tests</strong> are descriptive; cohort-level inference comes from the
+NB-GLMMs.</li>
+<li><strong>Reports.</strong> The HTML reports in <code>docs/reports/</code> are rendered documents; their
+Rmd sources in <code>reports/</code> reference figure files that are not part of this
+repository (see <code>reports/README.md</code>).</li>
+</ul>
+</div>
+<div id="repository-layout" class="section level2 hasAnchor" number="1.10">
+<h2><span class="header-section-number">1.10</span> 10. Repository layout<a href="workflow.html#repository-layout" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<pre><code>placenta-poe-pfas/
+  run_pipeline.sh          LSF submitter (dry run by default)
+  config/paths.sh          paths, environments, analysis parameters
+  config/resources.sh      LSF resources per step
+  bin/job_env.sh           shared helpers for job scripts
+  R/                       shared R library
+  00_reference/ ... 10_mediation_sim/   one folder per stage
+  tools/lsf_usage_report.sh
+  reports/                 Rmd sources and genotype methods
+  book/                    bookdown source of the project site
+  docs/                    rendered site (GitHub Pages) + HTML reports</code></pre>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="genotyping-methods.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": null,
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": null,
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "section"
+  }
+});
+});
+</script>
+
+</body>
+
+</html>

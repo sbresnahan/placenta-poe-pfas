@@ -1,0 +1,11 @@
+#!/bin/bash
+# =============================================================================
+# Stage 02 | infer_ancestry.lsf
+# PCA + 3-NN ancestry assignment (infer_ancestry.R).
+# In : TRIO_VCF_HG38, TRIO_PED, INFANT_META_CSV
+# Out: ANCESTRY_DIR/samples_<group>.txt, ANCESTRY_DIR/ancestry_assignments.tsv
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+run_step_r 02_ancestry_phasing/infer_ancestry.R
+for g in ${ANCESTRY_GROUPS}; do [[ -s "${ANCESTRY_DIR}/samples_${g}.txt" ]]; done
+receipt 02_infer_ancestry

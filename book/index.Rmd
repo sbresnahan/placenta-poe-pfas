@@ -1,0 +1,30 @@
+---
+title: "Parent-of-origin effects and PFAS exposure in human placenta"
+author: "Sean T. Bresnahan"
+site: bookdown::bookdown_site
+documentclass: book
+description: "Workflow, methods and reports of the placenta POE x PFAS project"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+source("_common.R")
+```
+
+# Overview {-}
+
+This site documents the `placenta-poe-pfas` pipeline: parent-of-origin effects
+(POE) on placental gene and isoform expression in GUSTO mother-father-infant
+trios, and their modification by prenatal PFAS exposure.
+
+| Chapter | Content |
+|---|---|
+| [Workflow](workflow.html) | stage diagram, inputs, how to run, methods per stage, outputs, caveats |
+| [Genotyping methods](genotyping-methods.html) | arrays, sample and SNP QC, genotype processing |
+| [Reports](reports.html) | rendered analysis reports |
+| [Configuration](config-files.html) | `config/paths.sh` and `config/resources.sh` |
+
+The pipeline runs on an LSF cluster through `run_pipeline.sh`; every stage is a
+folder of job scripts and R / Python drivers, with the shared model code in `R/`.
+
+Funding: NIH R21 (NIH RePORTER project 11437481).

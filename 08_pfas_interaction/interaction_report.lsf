@@ -1,0 +1,12 @@
+#!/bin/bash
+# =============================================================================
+# Stage 08 | interaction_report.lsf
+# Interaction tiers, figures and tables (interaction_report.R), then
+# dose-response curves (dose_response.R).
+# In : MODEL_DIR/poe_by_condition_*.rds, PFAS_*_COHORT_XLSX
+# Out: MODEL_DIR/poe_diff_tiers.rds, WORK_DIR tables, FIG_DIR figures
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+run_step_r 08_pfas_interaction/interaction_report.R
+run_step_r 08_pfas_interaction/dose_response.R
+receipt 08_report

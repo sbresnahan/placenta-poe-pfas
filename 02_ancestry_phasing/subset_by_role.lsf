@@ -1,0 +1,42 @@
+#!/bin/bash
+# =============================================================================
+# Stage 02 | subset_by_role.lsf      array: one element per ancestry group
+# Split each group's trios by role (IID prefix B = infant, M = mother, P = father):
+#   * phased infants -> bgzipped VCFs for upload to the SEAD imputation server
+#   * unphased mothers / fathers -> per-chromosome VCFs (reference copies)
+# In : BY_ANCESTRY_DIR/<group>_trios_{phased,unphased}/chr<N>.bcf, ANCESTRY_DIR/samples_<group>.txt
+# Out: SEAD_UPLOAD_DIR/<group>/<group>_chr<N>.vcf.gz
+#      TRIOS_DIR/{mother,father}/unphased_by_ancestry/<group>/<group>_chr<N>.vcf.gz
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+GROUP=$(nth_word "${IDX}" ${ANCESTRY_GROUPS})
+use_bcftools
+
+# sample lists by role: VCF IDs are FID_IID, IID starts with the role letter
+for role in B:infant M:mother P:father; do
+  letter=${role%%:*}; name=${role#*:}
+  grep "_${letter}" "${ANCESTRY_DIR}/samples_${GROUP}.txt" | sort -u > "${ANCESTRY_DIR}/${name}_samples_${GROUP}.txt"
+done
+
+INF_OUT="${SEAD_UPLOAD_DIR}/${GROUP}"
+MOM_OUT="${TRIOS_DIR}/mother/unphased_by_ancestry/${GROUP}"
+DAD_OUT="${TRIOS_DIR}/father/unphased_by_ancestry/${GROUP}"
+mkdir -p "${INF_OUT}" "${MOM_OUT}" "${DAD_OUT}"
+
+export GROUP ANCESTRY_DIR BY_ANCESTRY_DIR INF_OUT MOM_OUT DAD_OUT
+subset_chr() {
+  local c=$1 l
+  bcftools view -S "${ANCESTRY_DIR}/infant_samples_${GROUP}.txt" -Oz \
+    -o "${INF_OUT}/${GROUP}_chr${c}.vcf.gz" "${BY_ANCESTRY_DIR}/${GROUP}_trios_phased/chr${c}.bcf"
+  bcftools index -f "${INF_OUT}/${GROUP}_chr${c}.vcf.gz"
+  for l in mother:${MOM_OUT} father:${DAD_OUT}; do
+    bcftools view -S "${ANCESTRY_DIR}/${l%%:*}_samples_${GROUP}.txt" -Oz \
+      -o "${l#*:}/${GROUP}_chr${c}.vcf.gz" "${BY_ANCESTRY_DIR}/${GROUP}_trios_unphased/chr${c}.bcf"
+    bcftools index -f "${l#*:}/${GROUP}_chr${c}.vcf.gz"
+  done
+}
+export -f subset_chr
+printf '%s\n' ${AUTOSOMES} | xargs -P "${NCPU}" -I{} bash -c 'set -euo pipefail; subset_chr {}'
+
+for c in ${AUTOSOMES}; do [[ -s "${INF_OUT}/${GROUP}_chr${c}.vcf.gz.csi" ]]; done
+receipt 02_subset "${IDX}"

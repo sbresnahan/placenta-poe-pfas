@@ -1,0 +1,21 @@
+#!/bin/bash
+# =============================================================================
+# Stage 04 | g2t_vcf.lsf      array: one element per autosome
+# Project imputed genomic variants onto transcript coordinates (Ornaments).
+# In : IMPUTED_DIR/chr<N>.biallelic.filtered.vcf.gz, TX_GTF_EXONS, TX_FASTA
+# Out: TXVCF_DIR/chr<N>.txomic.vcf, TXVCF_DIR/chr<N>.g2t.txt
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+CHR=$(nth_word "${IDX}" ${AUTOSOMES})
+mkdir -p "${TXVCF_DIR}"
+use_venv "${ORNAMENTS_VENV}"
+
+convert_genomic_vcf_to_transcriptomic_vcf \
+  -v "${IMPUTED_DIR}/chr${CHR}.biallelic.filtered.vcf.gz" \
+  -g "${TX_GTF_EXONS}" \
+  -t "${TX_FASTA}" \
+  -o "${TXVCF_DIR}/chr${CHR}.txomic.vcf" \
+  -c "${TXVCF_DIR}/chr${CHR}.g2t.txt"
+
+[[ -s "${TXVCF_DIR}/chr${CHR}.txomic.vcf" ]]
+receipt 04_g2t "${IDX}"

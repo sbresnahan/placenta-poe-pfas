@@ -1,0 +1,28 @@
+# Reports {#reports}
+
+Rendered analysis reports. Each opens below; use the link to view it full-page.
+Sources are in `reports/` (see `reports/README.md` for how to re-knit them).
+
+## Methods: placenta POE and PFAS interaction
+
+[Open full page](reports/Placenta_POE_PFAS_methods.html)
+
+<iframe class="report-frame" src="reports/Placenta_POE_PFAS_methods.html" loading="lazy"></iframe>
+
+## PFAS x POE summary plots
+
+Volcano, p-value, QQ and forest plots for every PFAS (maternal and cord) at
+gene and transcript level. Large page (~18 MB).
+
+[Open full page](reports/all_PFAS_report.html)
+
+<iframe class="report-frame" src="reports/all_PFAS_report.html" loading="lazy"></iframe>
+
+## Mediation analysis simulation
+
+Type-I error of mediation methods for PFAS -> imprinted isoform -> SRS under
+the null.
+
+[Open full page](reports/PFAS_POE_SRS_NCsim.html)
+
+<iframe class="report-frame" src="reports/PFAS_POE_SRS_NCsim.html" loading="lazy"></iframe>

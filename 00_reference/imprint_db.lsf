@@ -1,0 +1,13 @@
+#!/bin/bash
+# =============================================================================
+# Stage 00 | imprint_db.lsf
+# Build the imprinted-gene and placenta-gene Ensembl tables (biomaRt).
+# biomaRt queries ensembl.org: the node needs internet access. If compute nodes
+# are offline, run `REPO=$PWD Rscript 00_reference/imprintDB.R` from a login or
+# RStudio session instead and then `touch $RUN_DIR/receipts/00_imprint_db.1.ok`.
+# In : TX_CLASSIF
+# Out: IMPRINT_DB, PLACENTA_DB
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+run_step_r 00_reference/imprintDB.R
+receipt 00_imprint_db

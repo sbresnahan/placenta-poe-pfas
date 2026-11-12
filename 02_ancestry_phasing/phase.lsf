@@ -1,0 +1,28 @@
+#!/bin/bash
+# =============================================================================
+# Stage 02 | phase.lsf      array: one element per (ancestry group x autosome)
+# Pedigree-aware haplotype phasing of trios with SHAPEIT5 phase_common.
+# In : BY_ANCESTRY_DIR/<group>_trios_unphased/chr<N>.bcf, TRIO_FAM_SHAPEIT5,
+#      GENETIC_MAP_DIR/chr<N>.b38.gmap.gz
+# Out: BY_ANCESTRY_DIR/<group>_trios_phased/chr<N>.bcf
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+GROUP=$(group_of "${IDX}")
+CHR=$(chr_of "${IDX}")
+IN="${BY_ANCESTRY_DIR}/${GROUP}_trios_unphased/chr${CHR}.bcf"
+OUT_DIR="${BY_ANCESTRY_DIR}/${GROUP}_trios_phased"
+mkdir -p "${OUT_DIR}"
+log "phasing ${GROUP} chr${CHR}"
+
+use_venv "${SHAPEIT5_VENV}"
+SHAPEIT5_phase_common \
+  --input "${IN}" \
+  --pedigree "${TRIO_FAM_SHAPEIT5}" \
+  --region "chr${CHR}" \
+  --map "${GENETIC_MAP_DIR}/chr${CHR}.b38.gmap.gz" \
+  --output "${OUT_DIR}/chr${CHR}.bcf" \
+  --log "${OUT_DIR}/chr${CHR}.log" \
+  --thread "${NCPU}"
+
+[[ -s "${OUT_DIR}/chr${CHR}.bcf" ]]
+receipt 02_phase "${IDX}"

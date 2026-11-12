@@ -1,0 +1,128 @@
+---
+title: "PFAS × Parent-of-Origin Effects: Summary Plots"
+author: "Sean T. Bresnahan"
+date: "`r format(Sys.Date())`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: false
+    df_print: paged
+params:
+  fig_dir: "figures/interaction"   # stage 08 FIG_DIR/interaction, or a copy (relative to this Rmd)
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(cowplot)   # ggdraw, draw_image, plot_grid
+library(ggplot2)
+fig_dir <- params$fig_dir
+if (!dir.exists(fig_dir))
+  stop("Figure folder not found: '", normalizePath(fig_dir, mustWork = FALSE),
+       "'. Set params$fig_dir or run reports/stage_figures.sh (see reports/README.md).", call. = FALSE)
+```
+
+# How this document is organized
+
+This report shows **p-value histogram**, **QQ plot**, **volcano**, and a **forest plot** for each exposure, grouped by:
+- **Level:** gene vs transcript, and
+- **Source:** maternal blood PFAS (*mat*) vs fetal/child blood PFAS (*child*).
+
+Each panel is a 2 × 2 grid in this order: histogram, QQ, volcano, forest.
+
+```{r helpers}
+# Helper to draw a 2x2 panel for a given prefix ('gene' or 'tx') and condition like 'PFBS_child'/'PFOA_mat'
+render_panel <- function(prefix = c("gene","tx"), cond) {
+  prefix <- match.arg(prefix)
+
+  # File names expected
+  files <- lapply(list(
+    pvals  = sprintf("%s_diffPOE_%s_BetaInt_pvals.png", prefix, cond),
+    pqq    = sprintf("%s_diffPOE_%s_BetaInt_pQQ.png",   prefix, cond),
+    main   = sprintf("%s_diffPOE_%s_BetaInt.png",       prefix, cond),
+    forest = sprintf("%s_forest_%s.png",                prefix, cond)
+  ), function(f) file.path(fig_dir, f))
+
+  # Check existence and report any missing (still attempt to draw what's available)
+  missing <- names(files)[!file.exists(unlist(files))]
+  if (length(missing) > 0) {
+    message(sprintf("[WARN] Missing for %s/%s: %s", prefix, cond, paste(missing, collapse = ", ")))
+  }
+
+  # Build placeholders for missing images to keep layout stable
+  make_img <- function(path) {
+    if (file.exists(path)) {
+      ggdraw() + draw_image(path, scale = 1)
+    } else {
+      ggdraw() + draw_label(sprintf("Missing: %s", basename(path)), size = 12)
+    }
+  }
+
+  p1 <- make_img(files$pvals)
+  p2 <- make_img(files$pqq)
+  p3 <- make_img(files$main)
+  p4 <- make_img(files$forest)
+
+  plot_grid(p1, p2, p3, p4, ncol = 2, nrow = 2)
+}
+
+conds_child <- c("PFBA_child","PFOA_child","PFNA_child","PFDA_child","PFUnDA_child","PFBS_child","PFHxS_child","PFOS_child")
+conds_mat   <- c("PFBA_mat","PFOA_mat","PFNA_mat","PFDA_mat","PFUnDA_mat","PFBS_mat","PFHxS_mat","PFOS_mat")
+```
+
+# Gene-level — Child PFAS
+
+```{r fig.width=8, fig.height=10, fig.align='center', results='asis'}
+for (cond in conds_child) {
+  cat(sprintf("## %s
+
+", cond))
+  print(render_panel(prefix = "gene", cond = cond))
+  cat("
+
+")
+}
+```
+
+# Gene-level — Maternal PFAS
+
+```{r fig.width=8, fig.height=10, fig.align='center', results='asis'}
+for (cond in conds_mat) {
+  cat(sprintf("## %s
+
+", cond))
+  print(render_panel(prefix = "gene", cond = cond))
+  cat("
+
+")
+}
+```
+
+# Transcript-level — Child PFAS
+
+```{r fig.width=8, fig.height=10, fig.align='center', results='asis'}
+for (cond in conds_child) {
+  cat(sprintf("## %s
+
+", cond))
+  print(render_panel(prefix = "tx", cond = cond))
+  cat("
+
+")
+}
+```
+
+# Transcript-level — Maternal PFAS
+
+```{r fig.width=8, fig.height=10, fig.align='center', results='asis'}
+for (cond in conds_mat) {
+  cat(sprintf("## %s
+
+", cond))
+  print(render_panel(prefix = "tx", cond = cond))
+  cat("
+
+")
+}
+```

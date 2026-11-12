@@ -1,0 +1,11 @@
+#!/bin/bash
+# =============================================================================
+# Stage 08 | fit_interaction.lsf  array: N_BATCHES_GENE + N_BATCHES_TX elements
+# Allele x condition NB-GLMMs for every feature of one batch and every
+# condition in POE_CONDITIONS.
+# In : BATCH_DIR/<level>_batch_NNN.rds, MODEL_DIR/model_metadata.rds
+# Out: BATCH_DIR/results/interaction_<level>_NNN.rds
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+run_step_r 08_pfas_interaction/fit_interaction.R
+receipt 08_fit "${IDX}"

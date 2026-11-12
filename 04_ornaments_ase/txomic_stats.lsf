@@ -1,0 +1,12 @@
+#!/bin/bash
+# =============================================================================
+# Stage 04 | txomic_stats.lsf      (qc)
+# Heterozygous-variant counts per transcript in the merged transcriptomic VCF.
+# In : TXVCF_MERGED, TX_CLASSIF      Out: WORK_DIR/txomic_variants_per_tx.tsv, figure
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+use_bcftools
+bcftools query -f '%CHROM\n' "${TXVCF_MERGED}" | uniq -c | awk 'BEGIN{OFS="\t"; print "transcript","n_variants"} {print $2,$1}' \
+  > "${WORK_DIR}/txomic_variants_per_tx.tsv"
+run_step_r 04_ornaments_ase/txomic_stats.R
+receipt 04_txomic_stats

@@ -1,0 +1,5 @@
+# Genotyping methods {#genotyping-methods}
+
+```{r, results = "asis"}
+include_md("../reports/genotype_methods.md")
+```

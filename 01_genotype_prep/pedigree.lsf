@@ -1,0 +1,12 @@
+#!/bin/bash
+# =============================================================================
+# Stage 01 | pedigree.lsf
+# Build the trio pedigree from the three PLINK .fam files and derive the
+# SHAPEIT5 pedigree from it.
+# In : TRIOS_DIR/{infant,mother,father}/*.fam
+# Out: TRIO_PED (FID IID PID MID SEX PHENO), TRIO_FAM_SHAPEIT5 (kid father mother)
+# =============================================================================
+source "${REPO:?submit with run_pipeline.sh}/bin/job_env.sh"
+run_step_r 01_genotype_prep/prep_ped.R
+bash "${REPO}/01_genotype_prep/make_shapeit5_fam.sh"
+receipt 01_pedigree

@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>1 Workflow | Parent-of-origin effects and PFAS exposure in human placenta</title>
   <meta name="description" content="Workflow, methods and reports of the placenta POE x PFAS project" />
-  <meta name="generator" content="bookdown 0.48 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.46 and GitBook 2.6.7" />
 
   <meta property="og:title" content="1 Workflow | Parent-of-origin effects and PFAS exposure in human placenta" />
   <meta property="og:type" content="book" />
@@ -1094,9 +1094,11 @@ classifier on two PCs; check <code>ancestry_assignments.tsv</code> and the PCA f
 pedigree IDs match the VCF sample IDs (<code>ID_MODE</code>, section 5, stage 01).</li>
 <li><strong>Within-sample tests</strong> are descriptive; cohort-level inference comes from the
 NB-GLMMs.</li>
-<li><strong>Reports.</strong> The HTML reports in <code>docs/reports/</code> are rendered documents; their
-Rmd sources in <code>reports/</code> reference figure files that are not part of this
-repository (see <code>reports/README.md</code>).</li>
+<li><strong>Reports.</strong> The HTML reports in <code>docs/reports/</code> are rendered documents. The
+figure-based Rmds in <code>reports/</code> read PNGs from <code>reports/figures/</code>, listed in
+<code>reports/figures/MANIFEST.tsv</code> and staged with <code>reports/stage_figures.sh</code>
+from the pipeline’s <code>FIG_DIR</code> or the local project folder; <code>figure5.png</code> of
+the methods report has no pipeline source (see <code>reports/README.md</code>).</li>
 </ul>
 </div>
 <div id="repository-layout" class="section level2 hasAnchor" number="1.10">
